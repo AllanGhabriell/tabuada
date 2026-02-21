@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Treino de Tabuada</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --card2:#0f1630;
+      --text:#e9eefc;
+      --muted:#9fb0ff;
+      --good:#4cf09d;
+      --bad:#ff5d6c;
+      --warn:#ffd166;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background: radial-gradient(1200px 700px at 50% 20%, rgba(120,140,255,.22), transparent 55%) , var(--bg);
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x:hidden; /* sem rolagem lateral */
+      touch-action: manipulation; /* reduz gestos */
+      -ms-touch-action: manipulation;
+    }
+
+    .safe{
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      height: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .app{
+      width:min(520px, 92vw);
+      height:min(760px, 92vh);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.15;
+    }
+    .title b{ font-size:15px; letter-spacing:.2px; }
+    .title span{ font-size:12px; color: rgba(233,238,252,.72); }
+
+    .btnrow{ display:flex; gap:8px; }
+    button{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding:10px 12px;
+      font-weight:650;
+      letter-spacing:.2px;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px); }
+    button.small{ padding:9px 10px; font-size:13px; }
+    button.primary{
+      background: rgba(120,140,255,.22);
+      border-color: rgba(120,140,255,.35);
+    }
+    button.danger{
+      background: rgba(255,93,108,.14);
+      border-color: rgba(255,93,108,.35);
+    }
+
+    main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      border-radius: 14px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      font-size:12px;
+      color: rgba(233,238,252,.85);
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: rgba(255,255,255,.55);
+    }
+    .dot.good{ background: var(--good); }
+    .dot.bad{ background: var(--bad); }
+    .dot.warn{ background: var(--warn); }
+
+    .card{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:16px;
+      padding:16px;
+      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+      border:1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .q{
+      font-size:44px;
+      font-weight:900;
+      letter-spacing:.5px;
+    }
+    .q small{
+      display:block;
+      font-size:13px;
+      font-weight:650;
+      color: rgba(233,238,252,.70);
+      margin-top:8px;
+    }
+
+    .answer{
+      width: min(340px, 90%);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+    }
+    input{
+      width: 100%;
+      padding:14px 14px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-size:18px;
+      font-weight:750;
+      text-align:center;
+      outline:none;
+    }
+    input::placeholder{ color: rgba(233,238,252,.45); }
+    input:focus{ border-color: rgba(120,140,255,.55); }
+
+    .feedback{
+      min-height:44px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(0,0,0,.12);
+      font-size:13px;
+      color: rgba(233,238,252,.80);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+    .feedback .bad{ color: var(--bad); font-weight:800; }
+    .feedback .good{ color: var(--good); font-weight:800; }
+    .feedback .warn{ color: var(--warn); font-weight:800; }
+
+    .hint{
+      font-size:12px;
+      color: rgba(233,238,252,.68);
+      line-height:1.35;
+    }
+
+    /* Modal */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 50;
+    }
+    .overlay.show{ display:flex; }
+    .modal{
+      width:min(520px, 92vw);
+      max-height: 82vh;
+      overflow:auto;
+      background: linear-gradient(180deg, rgba(18,26,51,.98), rgba(12,18,38,.98));
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .modal header{
+      border:none;
+      background: transparent;
+      box-shadow:none;
+      padding:14px 14px 10px 14px;
+      border-bottom:1px solid var(--line);
+      border-radius:0;
+    }
+    .modal .content{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .x{
+      width:42px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 0;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      font-weight:900;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:10px;
+    }
+    .chk{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      user-select:none;
+    }
+    .chk input{ width:18px; height:18px; margin:0; }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .row > *{ flex:1; }
+    .row .tight{ flex:0 0 auto; }
+
+    .select{
+      width:100%;
+      padding:12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight:750;
+    }
+
+    .footerbtns{
+      display:flex;
+      gap:10px;
+      padding: 0 14px 14px 14px;
+    }
+
+    @media (max-width:360px){
+      .q{ font-size:40px; }
+      .grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="safe">
+    <div class="app" id="app">
+      <header>
+        <div class="title">
+          <b>Treino de Tabuada</b>
+          <span id="subtitle">Minimalista • concluir</span>
+        </div>
+        <div class="btnrow">
+          <button class="small primary" id="btnOptions">Ordem</button>
+          <button class="small danger" id="btnReset">Reset</button>
+        </div>
+      </header>
+
+      <main>
+        <div class="stats">
+          <div class="pill"><span class="dot good"></span> Masterizadas: <b id="sMaster">0</b></div>
+          <div class="pill"><span class="dot warn"></span> Ativas: <b id="sActive">0</b></div>
+          <div class="pill"><span class="dot bad"></span> Erros: <b id="sWrong">0</b></div>
+          <div class="pill" id="timerPill" style="display:none;"><span class="dot"></span> ⏱ <b id="sTimer">0.0s</b></div>
+        </div>
+
+        <div class="card">
+          <div class="q" id="question">— × — = ?<small id="qMeta"></small></div>
+
+          <div class="answer">
+            <input id="answer" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Digite a resposta" />
+          </div>
+
+          <div class="feedback" id="feedback">Digite e pressione Enter.</div>
+
+          <div class="hint" id="hint">
+            Dica: acerto rápido some (modo concluir). Errou? volta mais vezes. Você controla tudo em “Ordem”.
+          </div>
+
+          <div style="display:flex; gap:10px; width:min(340px,90%);">
+            <button class="primary" id="btnSubmit" style="flex:1;">Responder</button>
+            <button id="btnSkip" class="small" style="flex:0 0 auto;">Pular</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Options Modal -->
+  <div class="overlay" id="overlayOptions" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <header>
+        <div class="title">
+          <b>Ordem / Configurações</b>
+          <span>Escolha modo, tabuadas e exclusões.</span>
+        </div>
+        <button class="x" data-close="overlayOptions">X</button>
+      </header>
+
+      <div class="content">
+        <div class="row">
+          <div>
+            <label style="display:block; font-size:12px; color:rgba(233,238,252,.75); margin-bottom:6px;">Modo de tabuada</label>
+            <select class="select" id="modeSelect">
+              <option value="minimal">Minimalista (sem repetição: a×b = b×a)</option>
+              <option value="conventional">Convencional (todas as combinações)</option>
+            </select>
+          </div>
+          <div class="tight" style="min-width:160px;">
+            <label style="display:block; font-size:12px; color:rgba(233,238,252,.75); margin-bottom:6px;">Sessão</label>
+            <select class="select" id="sessionSelect">
+              <option value="finish">Concluir (acerto rápido some)</option>
+              <option value="loop">Loop infinito</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="chk" style="flex:1;">
+            <input type="checkbox" id="toggleTimer" />
+            <div>
+              <div style="font-weight:800;">Ligar cronômetro</div>
+              <div style="font-size:12px; color:rgba(233,238,252,.65);">Mostra o tempo da questão atual.</div>
+            </div>
+          </label>
+
+          <label class="chk" style="flex:1;">
+            <input type="checkbox" id="toggleAutoFocus" checked />
+            <div>
+              <div style="font-weight:800;">Focar no campo</div>
+              <div style="font-size:12px; color:rgba(233,238,252,.65);">Abre o teclado automaticamente.</div>
+            </div>
+          </label>
+        </div>
+
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div>
+              <div style="font-weight:900; margin-bottom:4px;">Quais tabuadas treinar?</div>
+              <div style="font-size:12px; color:rgba(233,238,252,.65);">
+                Marque os números (ex.: 3,4,6,7,8,9 como na imagem).
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="small" id="btnAll">Todos</button>
+              <button class="small" id="btnNone">Nenhum</button>
+            </div>
+          </div>
+
+          <div class="grid" id="tablesGrid" style="margin-top:10px;"></div>
+        </div>
+
+        <div>
+          <div style="font-weight:900; margin-bottom:6px;">Excluir fatores “óbvios”</div>
+          <div style="font-size:12px; color:rgba(233,238,252,.65); margin-bottom:10px;">
+            Se marcar um número aqui, qualquer conta que use esse fator é removida (ex.: excluir 1 e 10).
+          </div>
+          <div class="grid" id="excludeGrid"></div>
+        </div>
+
+        <div>
+          <div style="font-weight:900; margin-bottom:6px;">Limites do multiplicador</div>
+          <div style="display:flex; gap:10px;">
+            <input class="select" id="minMul" type="number" min="0" max="20" value="1" />
+            <input class="select" id="maxMul" type="number" min="0" max="20" value="10" />
+          </div>
+          <div style="font-size:12px; color:rgba(233,238,252,.65); margin-top:8px;">
+            Padrão: 1 a 10. (Se quiser treinar 0 ou ir até 12, ajuste aqui.)
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--line); padding-top:12px;">
+          <div style="font-weight:900; margin-bottom:6px;">Regras de frequência (como você pediu)</div>
+          <ul style="margin:0; padding-left:18px; color:rgba(233,238,252,.75); font-size:13px; line-height:1.45;">
+            <li>Erro → volta bem mais vezes.</li>
+            <li>Acerto rápido → some (em “Concluir”).</li>
+            <li>Acerto lento → volta com menos frequência.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footerbtns">
+        <button class="danger" id="btnHardReset" style="flex:1;">Reset geral (zera tudo)</button>
+        <button class="primary" id="btnApply" style="flex:1;">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finish Modal -->
+  <div class="overlay" id="overlayFinish" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <header>
+        <div class="title">
+          <b>Você concluiu 🎉</b>
+          <span>Todas as contas dessa sessão foram masterizadas.</span>
+        </div>
+        <button class="x" data-close="overlayFinish">X</button>
+      </header>
+      <div class="content">
+        <div class="pill"><span class="dot good"></span> Masterizadas: <b id="fMaster">0</b></div>
+        <div class="pill"><span class="dot bad"></span> Erros totais: <b id="fWrong">0</b></div>
+        <div class="pill"><span class="dot"></span> Tentativas: <b id="fAttempts">0</b></div>
+        <div style="font-size:13px; color:rgba(233,238,252,.75); line-height:1.45;">
+          Quer fazer tudo de novo? Use <b>Reset</b> ou mude a ordem/tabuadas em <b>Ordem</b>.
+        </div>
+      </div>
+      <div class="footerbtns">
+        <button class="danger" id="btnFinishReset" style="flex:1;">Reset e recomeçar</button>
+        <button class="primary" data-close="overlayFinish" style="flex:1;">Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========= Util =========
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const now = () => performance.now();
+
+    // ========= Config padrão =========
+    const DEFAULTS = {
+      mode: "minimal",            // minimal | conventional
+      session: "finish",          // finish | loop
+      timer: false,
+      autoFocus: true,
+      tables: [3,4,6,7,8,9],      // parecido com o “corte” da imagem
+      excludeFactors: [1,10],     // “óbvios” por padrão
+      minMul: 1,
+      maxMul: 10
+    };
+
+    const LS_KEY = "tabuada_trainer_v1";
+
+    function loadCfg(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if(!raw) return structuredClone(DEFAULTS);
+        const cfg = JSON.parse(raw);
+        return { ...structuredClone(DEFAULTS), ...cfg };
+      }catch{
+        return structuredClone(DEFAULTS);
+      }
+    }
+    function saveCfg(cfg){
+      localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+    }
+
+    // ========= Estado de treino =========
+    // Cada item: {a,b, ans, w, wrong, attempts, mastered, lastRT}
+    let cfg = loadCfg();
+    let items = [];
+    let current = null;
+    let qStart = 0;
+
+    let totalWrong = 0;
+    let totalAttempts = 0;
+
+    // ========= UI =========
+    const $ = (id) => document.getElementById(id);
+
+    const elSubtitle = $("subtitle");
+    const elQuestion = $("question");
+    const elQMeta = $("qMeta");
+    const elAnswer = $("answer");
+    const elFeedback = $("feedback");
+    const elHint = $("hint");
+
+    const sMaster = $("sMaster");
+    const sActive = $("sActive");
+    const sWrong = $("sWrong");
+    const sTimer = $("sTimer");
+    const timerPill = $("timerPill");
+
+    const overlayOptions = $("overlayOptions");
+    const overlayFinish = $("overlayFinish");
+
+    // Options controls
+    const modeSelect = $("modeSelect");
+    const sessionSelect = $("sessionSelect");
+    const toggleTimer = $("toggleTimer");
+    const toggleAutoFocus = $("toggleAutoFocus");
+    const tablesGrid = $("tablesGrid");
+    const excludeGrid = $("excludeGrid");
+    const minMul = $("minMul");
+    const maxMul = $("maxMul");
+
+    // Finish stats
+    const fMaster = $("fMaster");
+    const fWrong = $("fWrong");
+    const fAttempts = $("fAttempts");
+
+    // ========= Geração das contas =========
+    function buildProblems(){
+      const minM = clamp(parseInt(cfg.minMul,10) || 1, 0, 20);
+      const maxM = clamp(parseInt(cfg.maxMul,10) || 10, 0, 20);
+      const low = Math.min(minM, maxM);
+      const high = Math.max(minM, maxM);
+
+      const tables = [...new Set(cfg.tables)].sort((a,b)=>a-b);
+      const exclude = new Set(cfg.excludeFactors || []);
+
+      const probs = [];
+
+      if(cfg.mode === "conventional"){
+        // Para cada tabuada escolhida: a × b, b no intervalo
+        for(const a of tables){
+          for(let b = low; b <= high; b++){
+            if(exclude.has(a) || exclude.has(b)) continue;
+            probs.push([a,b]);
+          }
+        }
+      } else {
+        // Minimalista: evita repetição (a×b = b×a)
+        // Estratégia: gera pares (a,b) onde a está em tables e b também pode estar em tables
+        // e b no intervalo [low,high] se estiver lá; se não, permite b no intervalo
+        // mas aplica regra a<=b quando b também é tabuada selecionada.
+        const tableSet = new Set(tables);
+
+        for(const a of tables){
+          for(let b = low; b <= high; b++){
+            if(exclude.has(a) || exclude.has(b)) continue;
+
+            // evita duplicata comutativa quando ambos são "fatores principais" (tabuadas marcadas)
+            if(tableSet.has(b)){
+              if(a > b) continue; // mantém apenas a<=b
+            }
+
+            // (opcional) também remove "exceções" bem óbvias quando o usuário excluiu
+            probs.push([a,b]);
+          }
+        }
+      }
+
+      // Normaliza: remove duplicatas exatas
+      const seen = new Set();
+      const unique = [];
+      for(const [a,b] of probs){
+        const k = `${a}x${b}`;
+        if(seen.has(k)) continue;
+        seen.add(k);
+        unique.push([a,b]);
+      }
+      return unique;
+    }
+
+    function initItems(resetStats=false){
+      const probs = buildProblems();
+
+      items = probs.map(([a,b]) => ({
+        a, b,
+        ans: a*b,
+        w: 1.0,             // peso base (frequência)
+        wrong: 0,
+        attempts: 0,
+        mastered: false,
+        lastRT: null
+      }));
+
+      if(resetStats){
+        totalWrong = 0;
+        totalAttempts = 0;
+      }
+
+      current = null;
+      qStart = 0;
+      updateHeaderSubtitle();
+      updateStats();
+      nextQuestion(true);
+    }
+
+    // ========= Seleção dinâmica (weighted random) =========
+    function pickNext(){
+      const active = items.filter(it => !it.mastered || cfg.session === "loop");
+      if(active.length === 0) return null;
+
+      // Em loop, mesmo masterizada pode voltar, mas com peso baixo
+      let total = 0;
+      for(const it of active){
+        const w = (cfg.session === "loop")
+          ? Math.max(0.10, it.w * (it.mastered ? 0.15 : 1.0))
+          : Math.max(0, it.w);
+        total += w;
+      }
+      if(total <= 0) return null;
+
+      let r = Math.random() * total;
+      for(const it of active){
+        const w = (cfg.session === "loop")
+          ? Math.max(0.10, it.w * (it.mastered ? 0.15 : 1.0))
+          : Math.max(0, it.w);
+        r -= w;
+        if(r <= 0) return it;
+      }
+      return active[active.length-1];
+    }
+
+    // ========= Regras de reforço =========
+    // - erro: aumenta muito o peso
+    // - acerto rápido: masteriza (só em finish) e zera peso
+    // - acerto lento: diminui peso (aparece menos), mas não masteriza imediatamente
+    function applyResult(it, correct, rtMs){
+      it.attempts++;
+      it.lastRT = rtMs;
+      totalAttempts++;
+
+      // thresholds (ajustáveis)
+      const FAST_MS = 1800;      // <1.8s = rápido
+      const SLOW_MS = 6500;      // >6.5s = lento
+
+      if(!correct){
+        it.wrong++;
+        totalWrong++;
+
+        // aumenta bem a frequência
+        it.w = Math.min(25, it.w * 2.4 + 1.2);
+
+        // nunca masteriza em erro
+        it.mastered = false;
+        return { tag: "bad", msg: `Errou: ${it.a} × ${it.b} = ${it.ans}` };
+      }
+
+      // correct
+      if(cfg.session === "finish" && rtMs <= FAST_MS){
+        it.mastered = true;
+        it.w = 0; // some
+        return { tag: "good", msg: `Acertou rápido ✅ (${(rtMs/1000).toFixed(1)}s) — masterizada!` };
+      }
+
+      if(rtMs >= SLOW_MS){
+        // acerto lento → aparece com MENOS frequência (como você pediu)
+        it.w = Math.max(0.25, it.w * 0.55);
+        // não masteriza
+        return { tag: "warn", msg: `Acertou, mas demorou ⏳ (${(rtMs/1000).toFixed(1)}s)` };
+      }
+
+      // acerto normal (nem rápido nem lento)
+      // vai "descendo" o peso devagar, e masteriza só depois de alguns acertos bons
+      it.w = Math.max(0.35, it.w * 0.75);
+
+      // regra simples de mastery gradual: 3 acertos sem erro recente + peso baixo
+      if(cfg.session === "finish" && it.wrong === 0 && it.attempts >= 3 && it.w <= 0.45){
+        it.mastered = true;
+        it.w = 0;
+        return { tag: "good", msg: `Acertou ✅ — masterizada por consistência!` };
+      }
+
+      return { tag: "good", msg: `Acertou ✅ (${(rtMs/1000).toFixed(1)}s)` };
+    }
+
+    // ========= Fluxo =========
+    function renderQuestion(it){
+      if(!it){
+        // concluiu
+        if(cfg.session === "finish"){
+          showFinish();
+          return;
+        }
+        // loop sem itens (raro): reinicia
+        initItems(false);
+        return;
+      }
+
+      current = it;
+      qStart = now();
+      elQuestion.firstChild && (elQuestion.childNodes[0].textContent = `${it.a} × ${it.b} = ?`);
+      elQMeta.textContent = (cfg.mode === "minimal")
+        ? "Minimalista (sem repetição comutativa)"
+        : "Convencional (todas as combinações)";
+
+      elAnswer.value = "";
+      elFeedback.innerHTML = `Digite e pressione <b>Enter</b>.`;
+      updateStats();
+      if(cfg.autoFocus){
+        setTimeout(()=> elAnswer.focus({preventScroll:true}), 0);
+      }
+    }
+
+    function nextQuestion(force=false){
+      // se estiver em finish e não houver mais ativas, mostra conclusão
+      if(!force && cfg.session === "finish"){
+        const activeCount = items.filter(it => !it.mastered).length;
+        if(activeCount === 0){
+          showFinish();
+          return;
+        }
+      }
+      const it = pickNext();
+      renderQuestion(it);
+    }
+
+    function submitAnswer(isSkip=false){
+      if(!current) return;
+
+      const rt = now() - qStart;
+      const raw = (elAnswer.value || "").trim();
+
+      if(isSkip || raw === ""){
+        // pular conta: conta como erro leve, aumenta pouco
+        current.attempts++;
+        totalAttempts++;
+        current.w = Math.min(25, current.w * 1.35 + 0.8);
+        elFeedback.innerHTML = `<span class="warn">Pulou</span>: ${current.a} × ${current.b} = <b>${current.ans}</b>`;
+        updateStats();
+        nextQuestion();
+        return;
+      }
+
+      const val = parseInt(raw, 10);
+      const correct = Number.isFinite(val) && val === current.ans;
+
+      const res = applyResult(current, correct, rt);
+
+      elFeedback.innerHTML = `<span class="${res.tag}">${res.msg}</span>`;
+      updateStats();
+
+      // passa pra próxima (como você pediu)
+      nextQuestion();
+    }
+
+    // ========= Stats / Timer =========
+    function updateHeaderSubtitle(){
+      const modeTxt = cfg.mode === "minimal" ? "Minimalista" : "Convencional";
+      const sessTxt = cfg.session === "loop" ? "loop" : "concluir";
+      elSubtitle.textContent = `${modeTxt} • ${sessTxt}`;
+    }
+
+    function updateStats(){
+      const masteredCount = items.filter(it => it.mastered).length;
+      const activeCount = items.filter(it => !it.mastered).length;
+
+      sMaster.textContent = String(masteredCount);
+      sActive.textContent = String(cfg.session === "loop" ? items.length : activeCount);
+      sWrong.textContent = String(totalWrong);
+
+      timerPill.style.display = cfg.timer ? "inline-flex" : "none";
+      if(cfg.timer){
+        const t = current ? (now() - qStart) : 0;
+        sTimer.textContent = `${(t/1000).toFixed(1)}s`;
+      }
+    }
+
+    let timerRAF = null;
+    function startTimerLoop(){
+      if(timerRAF) cancelAnimationFrame(timerRAF);
+      const tick = () => {
+        updateStats();
+        timerRAF = requestAnimationFrame(tick);
+      };
+      timerRAF = requestAnimationFrame(tick);
+    }
+
+    // ========= Modais =========
+    function show(el){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); }
+    function hide(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
+
+    document.addEventListener("click", (e)=>{
+      const t = e.target;
+      if(t && t.dataset && t.dataset.close){
+        hide($(t.dataset.close));
+      }
+      if(t === overlayOptions) hide(overlayOptions);
+      if(t === overlayFinish) hide(overlayFinish);
+    });
+
+    function showFinish(){
+      fMaster.textContent = String(items.filter(it=>it.mastered).length);
+      fWrong.textContent = String(totalWrong);
+      fAttempts.textContent = String(totalAttempts);
+      show(overlayFinish);
+    }
+
+    // ========= Opções UI =========
+    function buildGrids(){
+      // tabuadas 0..12 (você pode mudar)
+      const nums = Array.from({length:13}, (_,i)=>i);
+
+      tablesGrid.innerHTML = "";
+      for(const n of nums){
+        const id = `t_${n}`;
+        const wrap = document.createElement("label");
+        wrap.className = "chk";
+        wrap.innerHTML = `
+          <input type="checkbox" id="${id}" ${cfg.tables.includes(n) ? "checked":""} />
+          <div style="font-weight:900;">${n}</div>
+        `;
+        tablesGrid.appendChild(wrap);
+      }
+
+      excludeGrid.innerHTML = "";
+      for(const n of nums){
+        const id = `e_${n}`;
+        const wrap = document.createElement("label");
+        wrap.className = "chk";
+        wrap.innerHTML = `
+          <input type="checkbox" id="${id}" ${cfg.excludeFactors.includes(n) ? "checked":""} />
+          <div style="font-weight:900;">${n}</div>
+        `;
+        excludeGrid.appendChild(wrap);
+      }
+
+      modeSelect.value = cfg.mode;
+      sessionSelect.value = cfg.session;
+      toggleTimer.checked = !!cfg.timer;
+      toggleAutoFocus.checked = !!cfg.autoFocus;
+      minMul.value = cfg.minMul;
+      maxMul.value = cfg.maxMul;
+    }
+
+    function readGrids(){
+      const tables = [];
+      const exclude = [];
+      for(let n=0;n<=12;n++){
+        const t = document.getElementById(`t_${n}`);
+        const e = document.getElementById(`e_${n}`);
+        if(t && t.checked) tables.push(n);
+        if(e && e.checked) exclude.push(n);
+      }
+      cfg.mode = modeSelect.value;
+      cfg.session = sessionSelect.value;
+      cfg.timer = toggleTimer.checked;
+      cfg.autoFocus = toggleAutoFocus.checked;
+      cfg.tables = tables.length ? tables : [3,4,6,7,8,9]; // fallback
+      cfg.excludeFactors = exclude;
+      cfg.minMul = clamp(parseInt(minMul.value,10) || 1, 0, 20);
+      cfg.maxMul = clamp(parseInt(maxMul.value,10) || 10, 0, 20);
+      saveCfg(cfg);
+      updateHeaderSubtitle();
+    }
+
+    // ========= Botões =========
+    $("btnOptions").addEventListener("click", ()=>{
+      buildGrids();
+      show(overlayOptions);
+    });
+
+    $("btnApply").addEventListener("click", ()=>{
+      readGrids();
+      hide(overlayOptions);
+      initItems(false);
+    });
+
+    $("btnAll").addEventListener("click", ()=>{
+      for(let n=0;n<=12;n++){
+        const t = document.getElementById(`t_${n}`);
+        if(t) t.checked = true;
+      }
+    });
+    $("btnNone").addEventListener("click", ()=>{
+      for(let n=0;n<=12;n++){
+        const t = document.getElementById(`t_${n}`);
+        if(t) t.checked = false;
+      }
+    });
+
+    function softReset(){
+      // reset da sessão (mantém config)
+      initItems(true);
+      elFeedback.innerHTML = `Reset feito. Bora de novo.`;
+      if(cfg.autoFocus) elAnswer.focus({preventScroll:true});
+    }
+
+    $("btnReset").addEventListener("click", softReset);
+    $("btnHardReset").addEventListener("click", ()=>{
+      cfg = structuredClone(DEFAULTS);
+      saveCfg(cfg);
+      hide(overlayOptions);
+      initItems(true);
+    });
+
+    $("btnFinishReset").addEventListener("click", ()=>{
+      hide(overlayFinish);
+      softReset();
+    });
+
+    $("btnSubmit").addEventListener("click", ()=> submitAnswer(false));
+    $("btnSkip").addEventListener("click", ()=> submitAnswer(true));
+
+    elAnswer.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        submitAnswer(false);
+      }
+    });
+
+    // ========= Anti-zoom extra (nem todo browser respeita) =========
+    // iOS costuma ignorar user-scalable em alguns casos. Isso ajuda um pouco.
+    document.addEventListener("gesturestart", (e)=> e.preventDefault(), { passive:false });
+    document.addEventListener("touchmove", (e)=>{
+      if(e.scale && e.scale !== 1) e.preventDefault();
+    }, { passive:false });
+
+    // ========= Boot =========
+    updateHeaderSubtitle();
+    initItems(true);
+    startTimerLoop();
+  </script>
+</body>
+</html>
