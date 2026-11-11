@@ -412,8 +412,10 @@ function strategyForQuestion(item){
  if(cfg.operation!=="sub")return (method()?.guide?.[0]||"Pense em um cálculo equivalente.");
  const match=item.prompt.match(/^(-?[\d.,]+) − (?:\((-?[\d.,]+)\)|(-?[\d.,]+)) = \?$/);
  if(!match)return method().guide[0];
- const a=Number(match[1].replace(",",".").replace(/\./g,"")),b=Number((match[2]||match[3]).replace(",",".").replace(/\./g,""));
+ const a=Number(match[1].replace(",",".")),b=Number((match[2]||match[3]).replace(",","."));
  if(!Number.isFinite(a)||!Number.isFinite(b))return method().guide[0];
+ if((cfg.method==="auto"||cfg.method==="free")&&b<0)return "Subtrair um número negativo equivale a somar o seu oposto: pense em "+formatNumber(a)+" + "+formatNumber(-b)+".";
+ if((cfg.method==="auto"||cfg.method==="free")&&a<b)return "O resultado será negativo. Calcule primeiro "+formatNumber(b)+" − "+formatNumber(a)+" e depois coloque o sinal de menos.";
  let technique=cfg.method;
  if(technique==="auto"||technique==="free"){
   const d=a-b,near=Math.min(Math.abs(b)%10,10-(Math.abs(b)%10));
@@ -783,7 +785,11 @@ $("settingsModal").addEventListener("input",event=>{
 });
 $("allTables").addEventListener("click",()=>document.querySelectorAll('input[data-group="t"]').forEach(x=>x.checked=true));
 $("noTables").addEventListener("click",()=>document.querySelectorAll('input[data-group="t"]').forEach(x=>x.checked=false));
-$("restoreSettings").addEventListener("click",()=>{const selected=cfg.operation;const backup=cfg;cfg=normalize({...defaultCfg,operation:selected});createSettings();cfg=backup});
+$("restoreSettings").addEventListener("click",()=>{
+ const next=presetConfig("intermediate",cfg.operation,{...defaultCfg,operation:cfg.operation});
+ draftPreset="intermediate";draftBasePreset="intermediate";pendingPresetConfig=next;
+ fillPresetForm(next);renderPresetSelection();
+});
 $("historyButton").addEventListener("click",historyView);
 $("exportButton").addEventListener("click",()=>{
 const blob=new Blob([JSON.stringify({version:1,cfg,cycle,history},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="calculo-mental.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
