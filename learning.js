@@ -293,7 +293,7 @@ function arithmeticProblems(c,push){
 c.operation==="sub"?(c.method==="auto"?subtractionSkill(a,b):(M.sub.find(x=>x.id===c.method)?.name||"Subtração")):null);
  }
 }
-const old=read(LEGACY);let cfg=normalize(read(STORE)?.cfg||(old?{...defaultCfg,tables:old.tables,exclude:old.excludeFactors,min:old.minMul,max:old.maxMul,format:old.mode==="conventional"?"all":"minimal",showTimer:old.timer}:presetConfig("intermediate","mul",defaultCfg)));
+const old=read(LEGACY);let cfg=normalize(read(STORE)?.cfg||(old?{...defaultCfg,tables:old.tables,exclude:old.excludeFactors,min:old.minMul,max:old.maxMul,format:old.mode==="conventional"?"all":"minimal",showTimer:old.timer}:presetConfig("easy","mul",defaultCfg)));
 let memory=read(STORE);if(!memory||typeof memory!=="object")memory={};
 let profiles=memory.profiles&&typeof memory.profiles==="object"?memory.profiles:{};
 profiles[cfg.operation]=clone(cfg);
@@ -350,7 +350,9 @@ function renderEssentialCards(){
   b.setAttribute("aria-pressed",String(cfg.essentialStage===item.id));
   b.dataset.active=String(cfg.essentialStage===item.id);
   const title=document.createElement("strong");title.textContent=item.name;
-  const desc=document.createElement("small");desc.textContent=item.desc;
+  const desc=document.createElement("small");
+  const expected=item.id==="custom"?(cfg.tables.length*8):window.GaussEssentials.make(cfg.operation,item.id).length;
+  desc.textContent=item.desc+" · "+expected+" questões";
   b.append(title,desc);b.addEventListener("click",()=>changeEssentialStage(item.id));
   root.append(b);
  }
@@ -576,7 +578,7 @@ if(!confirm("Iniciar outro módulo? O ciclo atual ainda não foi concluído."))r
 profiles[cfg.operation]=clone(cfg);
 const saved=profiles[id];
 cfg=saved&&!(saved.quickPreset!=="custom"&&saved.presetVersion<2)?
- normalize(saved):presetConfig(saved?.quickPreset&&saved.quickPreset!=="custom"?saved.quickPreset:"intermediate",id,{...defaultCfg,operation:id,method:"free"});
+ normalize(saved):presetConfig(saved?.quickPreset&&saved.quickPreset!=="custom"?saved.quickPreset:(["add","sub","mul","div"].includes(id)?"easy":"intermediate"),id,{...defaultCfg,operation:id,method:"free"});
 cfg.operation=id;
 if(!M[id].some(x=>x.id===cfg.method))cfg.method="free";
 const cycleChanged=!!cycle&&JSON.stringify(cycle.cfg)!==JSON.stringify(cfg);
@@ -800,6 +802,13 @@ function renderFinished(){
  $("summaryOutcome").textContent=status.mastered+" dominadas · "+status.unresolved+
  " para revisar em outra sessão. Precisão inicial: "+$("endAccuracy").textContent+".";
  $("reviewCompleted").disabled=status.unresolved===0;
+ const stages=window.GaussEssentials.stages[cfg.operation]||[];
+ const choices=stages.filter(stage=>stage.id!=="all"&&stage.id!=="custom");
+ const index=choices.findIndex(stage=>stage.id===cfg.essentialStage);
+ const next=index>=0&&index<choices.length-1?choices[index+1]:null;
+ $("summaryNextStage").hidden=!next;
+ if(next){$("summaryNextStage").textContent="Próxima habilidade: "+next.name;$("summaryNextStage").dataset.stage=next.id}
+
  const trend=$("summaryTrend"),prior=history.slice(1).find(h=>
   h.operation===cfg.operation&&h.level===cfg.quickPreset&&h.method===cfg.method&&h.count>0&&
   h.firstPassCorrect!==undefined);
@@ -1146,6 +1155,10 @@ $("newCycle").addEventListener("click",()=>{
  current=null;persist();renderWorkspace();
 });
 $("reviewCompleted").addEventListener("click",()=>startPendingReview(cycle.items.filter(x=>!x.mastered)));
+$("summaryNextStage").addEventListener("click",()=>{
+ const id=$("summaryNextStage").dataset.stage;
+ if(id)changeEssentialStage(id);
+});
 $("summaryHome").addEventListener("click",()=>showPage("home"));
 $("summaryAnother").addEventListener("click",()=>showPage("home"));
 $("btnReview").addEventListener("click",review);
