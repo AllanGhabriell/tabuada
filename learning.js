@@ -1123,7 +1123,7 @@ const pct=h.firstPassCorrect!==undefined&&h.count?Math.round(h.firstPassCorrect*
 (h.correct+h.wrong?Math.round(h.correct*100/(h.correct+h.wrong))+"%":"—");
 small.textContent=new Date(h.ended).toLocaleDateString("pt-BR")+" · "+
 (h.mastered??"—")+" dominadas · "+(h.pending??"—")+" pendentes · "+
-(pct==="—"?pct:pct+"%")+" precisão inicial";
+(pct==="—"?pct:pct+"%")+" precisão inicial"+(h.assistance?" · "+h.assistance.independent+" acertos sem ajuda · "+h.assistance.helped+" com ajuda":"");
 div.append(b,small);el.append(div)
 }
 openModal("historyModal");
@@ -1213,7 +1213,7 @@ $("newCycle").addEventListener("click",()=>{
  if(!same.length)return;
  if(nextTimeout){clearTimeout(nextTimeout);nextTimeout=0}
  cycle={id:Date.now(),cycleVersion:2,cfg:clone(cfg),items:same,answered:0,correct:0,wrong:0,skips:0,
- totalMs:0,firstPassCorrect:0,hints:0,reviewLimit:single(cfg.mode)?0:2,
+ totalMs:0,firstPassCorrect:0,hints:0,assist:{independent:0,helped:0,slow:0,totalMs:0,validTimes:0,cues:0,expanded:0},reviewLimit:single(cfg.mode)?0:2,
  created:new Date().toISOString(),last:null,complete:false};
  current=null;persist();renderWorkspace();
 });
