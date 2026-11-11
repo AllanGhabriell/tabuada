@@ -24,7 +24,7 @@ const operations=[
 ];
 const modes=[
 {id:"learning",name:"Aprender",desc:"Dois acertos seguidos; sem limite de velocidade."},
-{id:"intelligent",name:"Aleatório inteligente",desc:"Dificuldades voltam até três acertos consecutivos."},
+{id:"intelligent",name:"Aleatório inteligente",desc:"Primeiro as questões novas; depois revisões limitadas das dificuldades."},
 {id:"sequential",name:"Sequencial",desc:"Cada questão aparece uma vez, em ordem."},
 {id:"random",name:"Aleatório simples",desc:"Cada questão aparece uma vez, embaralhada."},
 {id:"fluency",name:"Desafio de fluência",desc:"Todas as questões uma vez, com tempo e precisão."}
@@ -312,12 +312,15 @@ function migrateCycle(c){
  return c;
 }
 cycle=migrateCycle(cycle);
+if(cycle&&["add","sub","mul","div"].includes(cycle.cfg?.operation)){
+ if(cycle.cfg.operation!==cfg.operation||cycle.items.some(item=>!essentialItemAllowed(item,cfg)))cycle=null;
+}
 if(cycle?.cfg?.operation==="mul"){
  const acceptable=cycle.items.every(item=>{
   const m=String(item.prompt||"").match(/^([2-9]) × ([2-9]) = \?$/);
   return m&&cfg.operation==="mul"&&cfg.tables.includes(Number(m[1]))&&Number(item.answer)===Number(m[1])*Number(m[2]);
  });
- if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==cfg.tables.length*8))cycle=null;
+ if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==window.GaussEssentials.make("mul",cfg.essentialStage).length))cycle=null;
 }
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
 const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
@@ -651,6 +654,11 @@ function choose(){
 }
 function strategyForQuestion(item){
  if(!item)return "";
+ if(["add","sub","mul","div"].includes(cfg.operation)&&cfg.essentialStage!=="custom"){
+  const essential=window.GaussEssentials.label(cfg.operation,cfg.essentialStage);
+  if(cfg.essentialStage!=="all")return essential?.hint||method().guide[0];
+  if(cfg.operation!=="sub")return essential?.hint||method().guide[0];
+ }
  if(cfg.operation!=="sub")return (method()?.guide?.[0]||"Pense em um cálculo equivalente.");
  const match=item.prompt.match(/^(-?[\d.,]+) − (?:\((-?[\d.,]+)\)|(-?[\d.,]+)) = \?$/);
  if(!match)return method().guide[0];
