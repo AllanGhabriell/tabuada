@@ -72,3 +72,37 @@
 .difficulty-flags{display:grid;gap:4px;margin-top:12px}
 .settings-hint{font-size:11px;color:var(--muted);margin:10px 0 0}
 @media(max-width:560px){.checkbox-row{flex-wrap:wrap;gap:9px}.checkbox-row small{flex-basis:100%;margin-left:30px;text-align:left}}
+
+/* Navegação por níveis: clara sem expor configurações técnicas */
+.quick-configuration{display:flex;flex-direction:column;gap:13px}
+.quick-heading{display:flex;flex-direction:column;gap:2px}
+.quick-heading strong{font-size:17px;letter-spacing:-.2px}
+.quick-heading small{color:var(--muted);font-size:12px}
+.preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.preset-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:15px;border:1px solid var(--line);border-radius:14px;min-height:77px;background:var(--panel)}
+.preset-grid button b{font-size:14px;letter-spacing:-.2px}.preset-grid button small{color:var(--muted);font-size:11px}
+.preset-grid button[data-active="true"]{border-color:var(--accent);background:var(--accentsoft);box-shadow:inset 0 0 0 1px rgba(127,116,236,.25)}
+.preset-grid button:focus-visible,.method-card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.preset-current{color:var(--muted);font-size:12px;margin:0}
+.advanced-toggle{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border-radius:12px;padding:12px 14px;background:transparent}
+.advanced-toggle span{color:var(--muted);transition:transform .18s}.advanced-toggle[aria-expanded="true"] span{transform:rotate(180deg)}
+#advancedSettings{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+.method-library{margin-top:14px}
+.method-library-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.method-library-head strong{font-size:13px}.method-library-head small{font-size:11px;color:var(--accent)}
+.method-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.method-card{min-width:0;min-height:72px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+.method-card strong{font-size:12px;line-height:1.3;font-weight:750}
+.method-card small{font-size:11px;line-height:1.35;font-weight:400;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.method-card[data-active="true"]{background:var(--accentsoft);border-color:var(--accent);box-shadow:inset 0 0 0 1px rgba(131,119,242,.2)}
+.method-card:hover{border-color:var(--accent);box-shadow:0 8px 20px rgba(107,92,188,.12)}
+.method-select-fallback{display:none!important}
+.choice-grid:has(.method-select-fallback){grid-template-columns:minmax(0,1fr)}
+.choice-grid select, .field select{appearance:none;-webkit-appearance:none;padding-right:38px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23979aef' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 4 4 4 4-4'/%3E%3C/svg%3E");background-size:12px;background-position:right 14px center;background-repeat:no-repeat}
+.choice-grid select:hover, .field select:hover{background-color:var(--accentsoft);border-color:var(--accent)}
+.choice-grid select:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(127,116,236,.14)}
+.question-hint{width:min(450px,100%);text-align:center;font-size:12px}
+.question-hint button{font-size:11px;color:var(--accent);background:transparent;padding:7px 12px;border-color:transparent}
+.question-hint button:hover{background:var(--accentsoft);border-color:var(--line)}
+#strategyHintText{padding:12px;border-radius:12px;background:var(--accentsoft);border:1px solid var(--line);text-align:left;font-size:12px;line-height:1.55;margin:5px 0 0}
+@media(max-width:560px){.method-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.method-card{min-height:64px;padding:10px}.preset-grid button{min-height:69px;padding:12px}}
