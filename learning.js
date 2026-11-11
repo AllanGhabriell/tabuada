@@ -89,7 +89,7 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={presetVersion:2,operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+const defaultCfg={presetVersion:3,operation:"mul",method:"free",mode:"intelligent",level:1,tables:[1,2,3,4,5,6,7,8,9,10],exclude:[],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
 function normalize(c){
 const previous=c&&typeof c==="object"?c:{};
 const legacyDifficulty=!Object.prototype.hasOwnProperty.call(previous,"difficultyPreset");
@@ -102,7 +102,16 @@ c.quickPreset=["easy","intermediate","hard","expert","custom"].includes(c.quickP
 c.customBase=["easy","intermediate","hard","expert"].includes(c.customBase)?c.customBase:null;
 c.difficultyPreset=["basic","balanced","hard","custom"].includes(c.difficultyPreset)?c.difficultyPreset:"balanced";
 for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])c[key]=!!c[key];
-c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
+c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;
+if(c.operation==="mul"){
+ c.tables=c.tables.filter(x=>x>=1&&x<=10).sort((a,b)=>a-b);
+ if(!c.tables.length)c.tables=[1,2,3,4,5,6,7,8,9,10];
+ c.customNumbers=false;c.min=1;c.max=10;c.exclude=[];c.format="all";c.allCombos=true;
+ c.negativeOperands=false;c.negativeResults=false;c.decimalOperands=false;c.decimalResults=false;
+ c.excludeEqual=false;c.excludeZero=false;c.excludeOne=false;c.excludeSmallResults=false;
+ c.presetVersion=3;
+}
+return c}
 const PRESET_NAMES={easy:"Fácil",intermediate:"Intermediário",hard:"Difícil",expert:"Superdifícil",custom:"Personalizado"};
 function presetConfig(id,operation,base){
  const c={...clone(base),operation,quickPreset:id,customBase:id,presetVersion:2,method:"free",
@@ -111,10 +120,9 @@ function presetConfig(id,operation,base){
   excludeEqual:false,excludeZero:false,excludeOne:false,excludeSmallResults:false,difficultyPreset:"basic"};
  const index={easy:0,intermediate:1,hard:2,expert:3}[id]??1;
  if(operation==="mul"){
-  const numbers=[[2,3,4,5],[2,3,4,5,6,7,8,9,10],[2,3,4,5,6,7,8,9,10,11,12],[2,3,4,5,6,7,8,9,10,11,12]][index];
-  c.tables=index<=1?[1,...numbers]:numbers;c.min=index===3?2:1;c.max=index===3?15:10;
-  c.exclude=[];c.excludeOne=index>=1;c.customNumbers=false;
-  c.format="minimal";c.count=[20,30,36,40][index];c.method=index===3?"split":"free";
+  c.tables=index===0?[1,2,3,4,5]:[1,2,3,4,5,6,7,8,9,10];
+  c.exclude=[];c.min=1;c.max=10;c.customNumbers=false;c.allCombos=true;
+  c.format="all";c.method="free";c.presetVersion=3;
  }else if(operation==="div"){
   c.tables=index===0?[2,3,4,5]:index===1?[2,3,4,5,6,7,8,9,10]:index===2?[2,3,4,5,6,7,8,9,10,11,12]:[2,3,4,5,6,7,8,9,10,11,12];
   c.min=1;c.max=index===3?20:10;c.exclude=[];
@@ -321,6 +329,12 @@ const out=[],seen=new Set(),L=c.level,method=c.method;
 const push=(prompt,answer,id,skill)=>{if(!seen.has(id||prompt)){
  seen.add(id||prompt);const item=p(prompt,answer,id);if(skill)item.skill=skill;out.push(item)
 }};
+if(c.operation==="mul"){
+ for(const a of c.tables)for(let b=1;b<=10;b++){
+  push(a+" × "+b+" = ?",a*b,"mul:"+a+":"+b,"Tabuada do "+a);
+ }
+ return out;
+}
 if(arithmetic(c.operation)&&(c.operation==="add"||c.operation==="sub"||c.customNumbers)){arithmeticProblems(c,push);return out;}
 if(window.MentalExtra.methods[c.operation]){window.MentalExtra.create(c,push);return out;}
 if(c.operation==="mul"||c.operation==="div"){
