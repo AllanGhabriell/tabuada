@@ -230,6 +230,8 @@ profiles[cfg.operation]=clone(cfg);
 let history=Array.isArray(memory.history)?memory.history.slice(0,150):[];
 let cycle=memory.cycle&&Array.isArray(memory.cycle.items)?memory.cycle:null;
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
+const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
+let mobileNativeKeyboard=false;
 const single=m=>["random","sequential","fluency"].includes(m);
 const op=()=>operations.find(x=>x.id===cfg.operation);
 const method=()=>M[cfg.operation].find(x=>x.id===cfg.method);
@@ -335,6 +337,17 @@ cycle={id:Date.now(),cfg:clone(cfg),items,answered:0,correct:0,wrong:0,skips:0,t
 current=null;persist();return true;
 }
 function persist(){profiles[cfg.operation]=clone(cfg);save(STORE,{cfg,cycle,history,profiles})}
+function mobileInputMode(){
+ const enabled=mobileView.matches&&page==="workspace";
+ $("mobileInputArea").hidden=!enabled||cycle?.complete;
+ const isPrime=cfg.operation==="prime"&&cfg.primeType==="check";
+ $("mobileKeypad").hidden=isPrime;
+ $("mobilePrimeKeys").hidden=!isPrime;
+ $("answer").readOnly=enabled&&!mobileNativeKeyboard;
+ $("answer").setAttribute("aria-label",enabled&&!mobileNativeKeyboard?"Resposta; use os botões logo abaixo":"Resposta");
+ $("mobileKeyboardToggle").textContent=mobileNativeKeyboard?"▦ Teclas rápidas":"⌨ Teclado";
+ $("mobileKeyboardToggle").setAttribute("aria-pressed",String(mobileNativeKeyboard));
+}
 function showPage(name){
 page=name;
 $("home").hidden=name!=="home";$("workspace").hidden=name!=="workspace";
@@ -342,6 +355,7 @@ $("btnBack").hidden=name==="home";$("btnSettings").hidden=name==="home";
 $("btnReset").hidden=name==="home";
 $("brandSubtitle").textContent=name==="home"?"Treine seu raciocínio matemático":op().name+" · "+modes.find(x=>x.id===cfg.mode).name;
 if(name==="workspace"){renderWorkspace();}else renderHome();
+mobileInputMode();
 window.scrollTo(0,0);
 }
 function renderHome(){
@@ -451,7 +465,8 @@ $("answer").setAttribute("inputmode",["prime","fraction"].includes(cfg.operation
 $("feedback").textContent="Digite sua resposta e pressione Enter.";$("feedback").dataset.kind="";
 $("trainingArea").hidden=false;$("summaryArea").hidden=true;
 renderProgress();persist();
-if(cfg.autofocus&&matchMedia("(pointer:fine)").matches)$("answer").focus({preventScroll:true});
+if(cfg.autofocus&&(!mobileView.matches||mobileNativeKeyboard)&&matchMedia("(pointer:fine)").matches)$("answer").focus({preventScroll:true});
+mobileInputMode();
 }
 function answerEquivalent(raw,expected){
 const input=raw.trim().toLowerCase().replace(/\s/g,"").replace(",",".");
@@ -497,6 +512,7 @@ renderFinished();
 }
 function renderFinished(){
 $("trainingArea").hidden=true;$("summaryArea").hidden=false;
+$("mobileInputArea").hidden=true;
 $("summaryTitle").textContent="Ciclo concluído";
 $("endCount").textContent=cycle.items.length;
 $("endCorrect").textContent=cycle.correct;
@@ -727,6 +743,37 @@ $("guideCheck").addEventListener("click",()=>{
  $("guidePracticeResult").dataset.kind=correct?"good":"bad";
 });
 
+function appendMobileKey(key){
+ if(page!=="workspace"||locked||$("trainingArea").hidden||!current)return;
+ const input=$("answer");
+ if(key==="enter"){answer(false);return}
+ if(key==="yes"||key==="no"){input.value=key==="yes"?"sim":"não";answer(false);return}
+ if(key==="clear")input.value="";
+ else if(key==="erase")input.value=input.value.slice(0,-1);
+ else if(key==="minus"){input.value=input.value.startsWith("-")?input.value.slice(1):"-"+input.value}
+ else if(key==="decimal"){
+  if(!/[.,]/.test(input.value))input.value+=input.value?" ,".trim(): "0,";
+ }else if(key==="slash"){
+  if(!input.value.includes("/"))input.value+="/";
+ }else if(/^\d$/.test(key)){
+  if(input.value.length<18)input.value+=key;
+ }
+}
+$("mobileKeypad").addEventListener("click",e=>{
+ const target=e.target.closest("button[data-key]");
+ if(target)appendMobileKey(target.dataset.key);
+});
+$("mobilePrimeKeys").addEventListener("click",e=>{
+ const target=e.target.closest("button[data-key]");
+ if(target)appendMobileKey(target.dataset.key);
+});
+$("mobileKeyboardToggle").addEventListener("click",()=>{
+ mobileNativeKeyboard=!mobileNativeKeyboard;
+ mobileInputMode();
+ if(mobileNativeKeyboard)$("answer").focus({preventScroll:true});
+ else $("answer").blur();
+});
+if(typeof mobileView.addEventListener==="function")mobileView.addEventListener("change",mobileInputMode);
 $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer(false)});
 $("skipAnswer").addEventListener("click",()=>answer(true));
 $("newCycle").addEventListener("click",()=>{startCycle();renderWorkspace()});
@@ -802,7 +849,39 @@ try{if(file.size>1500000)throw Error("Arquivo muito grande.");const data=JSON.pa
 });
 document.querySelectorAll("[data-dismiss]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.dismiss)));
 document.querySelectorAll(".modal-overlay").forEach(modal=>modal.addEventListener("click",e=>{if(e.target===modal)closeModal(modal.id)}));
-document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal-overlay:not([hidden])").forEach(el=>closeModal(el.id))});
+$("helpShortcuts").addEventListener("click",()=>openModal("shortcutModal"));
+function anyModalOpen(){return [...document.querySelectorAll(".modal-overlay")].some(el=>!el.hidden)}
+function shortcutExit(){
+ if(page!=="workspace")return;
+ if(nextTimeout){clearTimeout(nextTimeout);nextTimeout=0;current=null}
+ showPage("home");
+}
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"){
+  if(anyModalOpen()){for(const modal of document.querySelectorAll(".modal-overlay:not([hidden])"))closeModal(modal.id)}
+  else if(page==="workspace")shortcutExit();
+  return;
+ }
+ if(e.altKey||e.ctrlKey||e.metaKey||e.isComposing||e.repeat||anyModalOpen())return;
+ const target=e.target;
+ const editing=!!target?.closest?.("input,textarea,select,[contenteditable='true']");
+ const key=e.key.toLowerCase();
+ const textAnswer=cfg.operation==="prime"&&cfg.primeType==="check";
+ if(key==="?"&&!editing){e.preventDefault();openModal("shortcutModal");return}
+ if(page!=="workspace")return;
+ // A tecla S funciona mesmo com foco no campo numérico. Respostas em texto ficam protegidas.
+ if(key==="s"&&(!editing||target===$("answer")&&!textAnswer)){
+  e.preventDefault();shortcutExit();return;
+ }
+ if(editing)return;
+ if(key==="p"){e.preventDefault();answer(true)}
+ else if(key==="d"){e.preventDefault();$("btnStrategyHint").click()}
+ else if(key==="c"){e.preventDefault();$("btnSettings").click()}
+ else if(key==="m"){e.preventDefault();$("workspaceOptions").open=!$("workspaceOptions").open}
+ else if(key==="g"){e.preventDefault();$("workspaceProgress").open=!$("workspaceProgress").open}
+ else if(key==="f"||e.key===" "){e.preventDefault();$("answer").focus({preventScroll:true})}
+ else if(e.key==="Enter"&&$("trainingArea").hidden===false){e.preventDefault();answer(false)}
+});
 function tick(){const t=$("timeDisplay");if(cfg.showTimer&&page==="workspace"&&!cycle?.complete){t.hidden=false;t.textContent=(current&&!locked?((performance.now()-started)/1000).toFixed(1):"0.0")+"s"}else t.hidden=true;tickHandle=requestAnimationFrame(tick)}
 if(cycle&&cycle.cfg?.operation!==cfg.operation)cycle=null;
 if(cycle&&cycle.complete)current=null;
