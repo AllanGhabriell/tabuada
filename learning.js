@@ -265,7 +265,7 @@ function arithmeticProblems(c,push){
 c.operation==="sub"?(c.method==="auto"?subtractionSkill(a,b):(M.sub.find(x=>x.id===c.method)?.name||"Subtração")):null);
  }
 }
-const old=read(LEGACY);let cfg=normalize(read(STORE)?.cfg||(old?{...defaultCfg,tables:old.tables,exclude:old.excludeFactors,min:old.minMul,max:old.maxMul,format:old.mode==="conventional"?"all":"minimal",showTimer:old.timer}:defaultCfg));
+const old=read(LEGACY);let cfg=normalize(read(STORE)?.cfg||(old?{...defaultCfg,tables:old.tables,exclude:old.excludeFactors,min:old.minMul,max:old.maxMul,format:old.mode==="conventional"?"all":"minimal",showTimer:old.timer}:presetConfig("intermediate","mul",defaultCfg)));
 let memory=read(STORE);if(!memory||typeof memory!=="object")memory={};
 let profiles=memory.profiles&&typeof memory.profiles==="object"?memory.profiles:{};
 profiles[cfg.operation]=clone(cfg);
