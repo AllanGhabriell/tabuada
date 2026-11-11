@@ -302,6 +302,35 @@ let mobileNativeKeyboard=false;
 const single=m=>["random","sequential","fluency"].includes(m);
 const op=()=>operations.find(x=>x.id===cfg.operation);
 const method=()=>M[cfg.operation].find(x=>x.id===cfg.method);
+function multiplicationAllowed(item,c=cfg){
+ if(c.operation!=="mul")return true;
+ const match=String(item.prompt||"").match(/^([1-9]|10) × ([1-9]|10) = \?$/);
+ if(!match)return false;
+ const a=Number(match[1]),b=Number(match[2]);
+ return c.tables.includes(a)&&b>=1&&b<=10&&Number(item.answer)===a*b;
+}
+function showMultiplicationPicker(){
+ const show=cfg.operation==="mul";
+ $("multiplicationPicker").hidden=!show;
+ if(!show)return;
+ const grid=$("mulPickerGrid");grid.replaceChildren();
+ for(let n=1;n<=10;n++){
+  const label=document.createElement("label");label.className="mul-option";
+  const check=document.createElement("input");check.type="checkbox";check.value=String(n);
+  check.checked=cfg.tables.includes(n);check.dataset.mulTable=String(n);
+  const visual=document.createElement("span");visual.textContent=String(n);
+  label.append(check,visual);grid.append(label);
+ }
+ updateMulPickerCount();
+ $("mulSelectedLabel").textContent=cfg.tables.join(", ");
+ $("mulTotalLabel").textContent=(cfg.tables.length*10)+" contas";
+}
+function updateMulPickerCount(){
+ const nums=[...document.querySelectorAll("input[data-mul-table]:checked")].map(x=>Number(x.value));
+ $("mulSelectionCount").textContent=nums.length+" tabuada"+(nums.length===1?"":"s")+" · "+(nums.length*10)+" contas";
+ $("mulApply").disabled=nums.length===0;
+}
+
 function renderMethodCards(){
  const root=$("methodCards");root.replaceChildren();
  const methods=M[cfg.operation];
@@ -487,6 +516,7 @@ function options(select,items,key){select.replaceChildren();for(const x of items
 function renderWorkspace(){
 if(!cycle||cycle.cfg.operation!==cfg.operation){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 options($("modeSelect"),modes,cfg.mode);
+showMultiplicationPicker();
 options($("methodSelect"),M[cfg.operation],cfg.method);
 renderMethodCards();
 $("moduleTitle").textContent=op().name;$("questionOperation").textContent=op().name.toUpperCase()+" · RESOLVA MENTALMENTE";$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
@@ -942,6 +972,23 @@ addEventListener("pointermove",e=>{tx=e.clientX;ty=e.clientY;if(!r)r=requestAnim
 }
 $("btnBack").addEventListener("click",()=>showPage("home"));
 $("btnSettings").addEventListener("click",()=>{createSettings();openModal("settingsModal")});
+$("mulPickerGrid").addEventListener("change",updateMulPickerCount);
+$("mulPickAll").addEventListener("click",()=>{
+ document.querySelectorAll("input[data-mul-table]").forEach(x=>x.checked=true);updateMulPickerCount();
+});
+$("mulPickNone").addEventListener("click",()=>{
+ document.querySelectorAll("input[data-mul-table]").forEach(x=>x.checked=false);updateMulPickerCount();
+});
+$("mulApply").addEventListener("click",()=>{
+ const selected=[...document.querySelectorAll("input[data-mul-table]:checked")].map(x=>Number(x.value)).sort((a,b)=>a-b);
+ if(!selected.length){notify("Escolha pelo menos uma tabuada.");return}
+ if(selected.join(",")===cfg.tables.join(",")){$("multiplicationPicker").open=false;return}
+ if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Trocar as tabuadas reinicia o ciclo atual. Continuar?"))return;
+ const oldCfg=cfg;
+ cfg=normalize({...cfg,tables:selected,quickPreset:"custom",customBase:null});
+ if(!startCycle()){cfg=oldCfg;return}
+ $("multiplicationPicker").open=false;renderWorkspace();
+});
 $("btnReset").addEventListener("click",()=>{if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Recomeçar o ciclo atual?"))return;if(startCycle())renderWorkspace()});
 $("methodSelect").addEventListener("change",e=>changeMethod(e.target.value));
 $("modeSelect").addEventListener("change",e=>changeMode(e.target.value));
