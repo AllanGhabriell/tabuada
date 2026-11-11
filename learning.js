@@ -296,6 +296,13 @@ function migrateCycle(c){
  return c;
 }
 cycle=migrateCycle(cycle);
+if(cycle?.cfg?.operation==="mul"){
+ const acceptable=cycle.items.every(item=>{
+  const m=String(item.prompt||"").match(/^([1-9]|10) × ([1-9]|10) = \?$/);
+  return m&&cfg.operation==="mul"&&cfg.tables.includes(Number(m[1]))&&Number(item.answer)===Number(m[1])*Number(m[2]);
+ });
+ if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==cfg.tables.length*10))cycle=null;
+}
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
 const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
 let mobileNativeKeyboard=false;
@@ -521,7 +528,8 @@ options($("methodSelect"),M[cfg.operation],cfg.method);
 renderMethodCards();
 $("moduleTitle").textContent=op().name;$("questionOperation").textContent=op().name.toUpperCase()+" · RESOLVA MENTALMENTE";$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
 $("methodHelp").disabled=false;
-$("btnReview").hidden=history.length===0;
+$("btnReview").hidden=!history.some(h=>h.operation===cfg.operation&&
+ Array.isArray(h.hard)&&h.hard.some(item=>cfg.operation!=="mul"||multiplicationAllowed(item)));
 renderProgress();
 if(cycle.complete){renderFinished();return}
 showQuestion();
@@ -751,11 +759,12 @@ function renderFinished(){
  renderProgress();
 }
 function startPendingReview(items){
+ if(cfg.operation==="mul")items=items.filter(item=>multiplicationAllowed(item));
  if(!items.length){notify("Não há questões pendentes para revisar.");return}
  if(nextTimeout){clearTimeout(nextTimeout);nextTimeout=0}
  cfg.mode="learning";
- cycle={id:Date.now(),cycleVersion:2,cfg:clone(cfg),
-  items:items.map(x=>({...p(x.prompt,x.answer,x.id),weight:2})),
+ cycle={id:Date.now(),cycleVersion:2,reviewSession:true,cfg:clone(cfg),
+  items:items.map(x=>({...p(x.prompt,x.answer,x.id),skill:x.skill,weight:2})),
   answered:0,correct:0,wrong:0,skips:0,totalMs:0,firstPassCorrect:0,
   hints:0,reviewLimit:2,created:new Date().toISOString(),last:null,complete:false};
  current=null;persist();showPage("workspace");
@@ -941,6 +950,9 @@ function updateComboPreview(){
 }
 function applySettings(){
  const next=settingsDraft();
+ if(cfg.operation==="mul"&&![...document.querySelectorAll('input[data-group="t"]:checked')].length){
+  notify("Selecione pelo menos uma tabuada de 1 a 10.");return;
+ }
  if((cfg.operation==="mul"||cfg.operation==="div")&&!next.customNumbers&&!next.tables.length){
   notify("Selecione pelo menos uma tabuada.");return;
  }
@@ -952,7 +964,8 @@ function applySettings(){
  persist();closeModal("settingsModal");renderWorkspace();
 }
 function review(){
- const last=history.find(x=>x.operation===cfg.operation&&Array.isArray(x.hard)&&x.hard.length);
+ const last=history.find(x=>x.operation===cfg.operation&&Array.isArray(x.hard)&&
+ x.hard.some(item=>cfg.operation!=="mul"||multiplicationAllowed(item)));
  if(!last){notify("Ainda não há dificuldades registradas para este módulo.");return}
  if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Iniciar revisão e substituir o ciclo atual?"))return;
  startPendingReview(last.hard);
