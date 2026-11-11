@@ -127,7 +127,7 @@ if(kind===2){const factor=[2,3,5,6,7][i%5];add("√"+a*a*factor+" = ?√"+factor
 if(c.operation==="ratio"){
 for(let i=0;i<n;i++){
 const a=rand(1,12),b=rand(2,12),k=rand(2,7),kind=m==="simplify"?0:m==="equivalent"?1:i%2;
-if(kind===0)add((a*k)+":"+(b*k)+" = ?:"+b,a,i);
+if(kind===0){const g=((x,y)=>{while(y){[x,y]=[y,x%y]}return x})(a,b);add((a*k)+":"+(b*k)+" = ?:"+(b/g)+" (razão irredutível)",a/g,i);}
 else add(a+":"+b+" = "+(a*k)+":?",b*k,i);
 }return;
 }
@@ -138,8 +138,12 @@ const u=rand(2,8),v=rand(2,8),k=rand(2,L===1?3:5);
 if(kind===0)add(u+" itens custam R$ "+u*v+". "+(u*k)+" itens custam quanto? (R$)",u*v*k,i);
 if(kind===1)add((u*k)+" trabalhadores fazem uma obra em "+v+" dias. "+u+" trabalhadores levam quantos dias?",v*k,i);
 if(kind===2){
- const machines=rand(2,5),hours=rand(2,6),days=rand(2,6),per=rand(2,5),pieces=machines*hours*days*per;
- add(machines+" máquinas, "+hours+" h/dia, "+days+" dias → "+pieces+" peças. "+(machines*k)+" máquinas, "+hours+" h/dia, "+(days*2)+" dias → ? peças",pieces*k*2,i);
+ const machines=rand(2,5),hours=rand(2,6),days=(i%2===0?rand(1,4)*4:rand(2,6)),per=rand(2,5),pieces=machines*hours*days*per;
+ if(i%2===0){
+  add(machines+" máquinas, "+hours+" h/dia, "+days+" dias fazem "+pieces+" peças. "+(machines*2)+" máquinas, "+(hours*2)+" h/dia fazem a mesma quantidade em quantos dias?",days/4,i);
+ }else{
+  add(machines+" máquinas, "+hours+" h/dia, "+days+" dias → "+pieces+" peças. "+(machines*k)+" máquinas, "+hours+" h/dia, "+(days*2)+" dias → ? peças",pieces*k*2,i);
+ }
 }
 }return;
 }
