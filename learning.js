@@ -89,7 +89,7 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
 function normalize(c){
 const previous=c&&typeof c==="object"?c:{};
 const legacyDifficulty=!Object.prototype.hasOwnProperty.call(previous,"difficultyPreset");
@@ -98,13 +98,14 @@ if(legacyDifficulty&&["add","sub","mul","div"].includes(c.operation)){
  const profile=Number(c.level)>=3?"hard":Number(c.level)===2?"balanced":"balanced";
  Object.assign(c,profile==="hard"?{difficultyPreset:"hard",excludeEqual:true,excludeZero:true,excludeOne:true,excludeSmallResults:true}:{difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false});
 }if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;
-c.quickPreset=["easy","intermediate","hard","expert","custom"].includes(c.quickPreset)?c.quickPreset:"intermediate";
+c.quickPreset=["easy","intermediate","hard","expert","custom"].includes(c.quickPreset)?c.quickPreset:"custom";
+c.customBase=["easy","intermediate","hard","expert"].includes(c.customBase)?c.customBase:null;
 c.difficultyPreset=["basic","balanced","hard","custom"].includes(c.difficultyPreset)?c.difficultyPreset:"balanced";
 for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])c[key]=!!c[key];
 c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
 const PRESET_NAMES={easy:"Fácil",intermediate:"Intermediário",hard:"Difícil",expert:"Superdifícil",custom:"Personalizado"};
 function presetConfig(id,operation,base){
- const c={...clone(base),quickPreset:id};
+ const c={...clone(base),quickPreset:id,customBase:id};
  const map={
   easy:{aMax:10,bMax:10,count:20,decimalOperands:false,decimalResults:false,negativeOperands:false,negativeResults:false,excludeEqual:false,excludeZero:false,excludeOne:false,excludeSmallResults:false,difficultyPreset:"basic"},
   intermediate:{aMax:30,bMax:30,count:28,decimalOperands:false,decimalResults:false,negativeOperands:false,negativeResults:false,excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false,difficultyPreset:"balanced"},
@@ -559,7 +560,8 @@ function displayGuide(){
 function openModal(id){$(id).hidden=false}
 function closeModal(id){$(id).hidden=true}
 function notify(msg){$("toast").textContent=msg;$("toast").hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$("toast").hidden=true,3500)}
-let draftPreset="intermediate";
+let draftPreset="custom";
+let draftBasePreset=null;
 let pendingPresetConfig=null;
 let advancedOpen=false;
 function renderPresetSelection(){
@@ -567,7 +569,9 @@ function renderPresetSelection(){
   button.dataset.active=String(button.dataset.preset===draftPreset);
   button.setAttribute("aria-pressed",String(button.dataset.preset===draftPreset));
  }
- $("presetCurrent").textContent=draftPreset==="custom"?"Treino personalizado":PRESET_NAMES[draftPreset]+" · configuração pronta";
+ $("presetCurrent").textContent=draftPreset==="custom"?
+ (draftBasePreset?PRESET_NAMES[draftBasePreset]+" modificado":"Treino personalizado"):
+ PRESET_NAMES[draftPreset]+" · configuração pronta";
 }
 function fillPresetForm(c){
  for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=c[k];
@@ -580,7 +584,8 @@ function fillPresetForm(c){
  updateComboPreview();
 }
 function createSettings(){
-draftPreset=cfg.quickPreset||"intermediate";
+draftPreset=cfg.quickPreset||"custom";
+draftBasePreset=cfg.customBase||null;
 pendingPresetConfig=null;
 renderPresetSelection();
 $("advancedSettings").hidden=!advancedOpen;
@@ -639,6 +644,7 @@ function settingsDraft(){
  decimalResults:$("decimalResults").checked,
  decimalPlaces:$("decimalPlaces").value,
  quickPreset:draftPreset,
+ customBase:draftBasePreset,
  difficultyPreset:$("difficultyPreset").value,
  excludeEqual:$("excludeEqual").checked,excludeZero:$("excludeZero").checked,
  excludeOne:$("excludeOne").checked,excludeSmallResults:$("excludeSmallResults").checked});
@@ -732,6 +738,7 @@ for(const button of document.querySelectorAll("[data-preset]")){
  button.addEventListener("click",()=>{
   const next=presetConfig(button.dataset.preset,cfg.operation,cfg);
   draftPreset=button.dataset.preset;
+  draftBasePreset=draftPreset;
   pendingPresetConfig=next;
   fillPresetForm(next);renderPresetSelection();
   // A opção pronta pode ser iniciada imediatamente, sem passar pelos controles avançados.
@@ -739,15 +746,16 @@ for(const button of document.querySelectorAll("[data-preset]")){
  });
 }
 $("advancedSettings").addEventListener("input",event=>{
- if(event.target.matches("input,select")){draftPreset="custom";renderPresetSelection()}
+ if(event.target.matches("input,select")){if(draftPreset!=="custom")draftBasePreset=draftPreset;draftPreset="custom";renderPresetSelection()}
 });
 $("advancedSettings").addEventListener("change",event=>{
- if(event.target.matches("input,select")){draftPreset="custom";renderPresetSelection()}
+ if(event.target.matches("input,select")){if(draftPreset!=="custom")draftBasePreset=draftPreset;draftPreset="custom";renderPresetSelection()}
 });
 document.querySelectorAll("[data-range]").forEach(button=>button.addEventListener("click",()=>{
  const max=Number(button.dataset.range);
  for(const id of ["operandAMin","operandBMin"])$(id).value="0";
  for(const id of ["operandAMax","operandBMax"])$(id).value=String(max);
+ if(draftPreset!=="custom")draftBasePreset=draftPreset;draftPreset="custom";renderPresetSelection();
  updateComboPreview();
 }));
 const difficultyPresets={
