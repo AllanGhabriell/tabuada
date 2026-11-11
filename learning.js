@@ -1145,6 +1145,7 @@ $("mobileKeyboardToggle").addEventListener("click",()=>{
 if(typeof mobileView.addEventListener==="function")mobileView.addEventListener("change",mobileInputMode);
 $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer(false)});
 $("skipAnswer").addEventListener("click",()=>answer(true));
+$("mobileSkip").addEventListener("click",()=>answer(true));
 $("newCycle").addEventListener("click",()=>{
  const same=cycle.items.map(x=>({...p(x.prompt,x.answer,x.id),skill:x.skill}));
  if(!same.length)return;
