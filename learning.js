@@ -83,64 +83,63 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalPlaces:1};
-function normalize(c){c={...clone(defaultCfg),...(c&&typeof c==="object"?c:{})};if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
+const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false};
+function normalize(c){c={...clone(defaultCfg),...(c&&typeof c==="object"?c:{})};if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
 const FIRST_OPERATIONS=["add","sub","mul","div"];
 const arithmetic=(op)=>FIRST_OPERATIONS.includes(op);
 const safeRange=(a,b)=>[Math.min(a,b),Math.max(a,b)];
+function operandValues(lo,hi,c){
+ const scale=c.decimalOperands?10**c.decimalPlaces:1;
+ const [low,high]=safeRange(lo,hi),positive=[];
+ for(let i=low*scale;i<=high*scale;i++)positive.push(i);
+ if(!c.negativeOperands)return positive;
+ const negatives=positive.filter(n=>n!==0).map(n=>-n).reverse();
+ return negatives.concat(positive);
+}
+function supportsValue(c,a,b){
+ if(c.operation==="div"&&b===0)return false;
+ const value=c.operation==="add"?a+b:c.operation==="sub"?a-b:c.operation==="mul"?a*b:a/b;
+ if(!c.negativeResults&&value<0)return false;
+ if(c.operation==="div"&&!c.decimalResults&&!Number.isInteger(value))return false;
+ if(c.operation==="div"&&c.decimalResults&&Math.abs(value-Number(value.toFixed(c.decimalPlaces)))>1e-9)return false;
+ return true;
+}
 function arithmeticCount(c){
-const [amin,amax]=safeRange(c.aMin,c.aMax),[bmin,bmax]=safeRange(c.bMin,c.bMax);
-let total=0;for(let a=amin;a<=amax;a++)for(let b=bmin;b<=bmax;b++){
-if(c.operation==="sub"&&!c.negativeResults&&!c.negativeOperands&&a<b)continue;
-if(c.operation==="div"&&b===0)continue;
-total++;
-}return total;
+ const a=operandValues(c.aMin,c.aMax,c),b=operandValues(c.bMin,c.bMax,c);
+ let count=0;
+ for(const x of a)for(const y of b)if(supportsValue(c,x/(c.decimalOperands?10**c.decimalPlaces:1),y/(c.decimalOperands?10**c.decimalPlaces:1)))count++;
+ return count;
 }
 function arithmeticProblems(c,push){
-const [amin,amax]=safeRange(c.aMin,c.aMax),[bmin,bmax]=safeRange(c.bMin,c.bMax);
-const combos=[],op=c.operation,scale=c.decimalOperands?10**c.decimalPlaces:1;
-for(let a=amin;a<=amax;a++)for(let b=bmin;b<=bmax;b++){
- if(op==="sub"&&!c.negativeResults&&!c.negativeOperands&&a<b)continue;
- if(op==="div"&&b===0)continue;
- combos.push([a,b]);
-}
-if(!combos.length)return;
-if(c.allCombos&&combos.length>10000)throw new Error("Há "+combos.length.toLocaleString("pt-BR")+" combinações. Para usar todas, reduza o intervalo até 10.000 contas.");
-const target=c.allCombos?combos.length:Math.min(c.count,combos.length);
-const seen=new Set(),chosen=[];
-if(c.allCombos||c.mode==="sequential") {
- for(let i=0;i<target;i++)chosen.push(combos[i]);
-}else{
- while(chosen.length<target){let i=rand(0,combos.length-1);if(seen.has(i))continue;seen.add(i);chosen.push(combos[i])}
-}
-for(let i=0;i<chosen.length;i++){
- const [a,b]=chosen[i];let x=a/scale,y=b/scale;
- // Sinais negativos nos operandos não exigem ativar resultados negativos.
- if(c.negativeOperands){
-  if(i%3===0)x=-x;
-  if(i%4===0)y=-y;
+ const scale=c.decimalOperands?10**c.decimalPlaces:1;
+ const left=operandValues(c.aMin,c.aMax,c),right=operandValues(c.bMin,c.bMax,c);
+ const totalSize=left.length*right.length;
+ if(c.allCombos&&totalSize>120000)throw Error("Intervalo muito amplo para todas as combinações. Reduza os valores.");
+ const eligible=[];
+ for(const x of left)for(const y of right){
+  const a=x/scale,b=y/scale;
+  if(supportsValue(c,a,b))eligible.push([a,b]);
  }
- let result,prompt,sign=op==="add"?" + ":op==="sub"?" − ":op==="mul"?" × ":" ÷ ";
- if(op==="div"){
-   // Ao trabalhar só inteiros, priorizar divisões exatas e limitar o quociente.
-   if(!c.decimalOperands){
-     if(c.negativeResults||c.negativeOperands){
-       x=(Math.abs(a)*Math.abs(b))*(x<0?-1:1);
-       y=Math.abs(b)*(y<0?-1:1);
-     }else{x=a*b;y=b}
-   }
-   if(y===0)continue;
+ if(!eligible.length)return;
+ if(c.allCombos&&eligible.length>10000)throw Error("Esta seleção gera "+eligible.length.toLocaleString("pt-BR")+" operações. Limite de 10.000 por ciclo; reduza o intervalo.");
+ const wanted=c.allCombos?eligible.length:Math.min(c.count,eligible.length);
+ let pairs;
+ if(c.allCombos||c.mode==="sequential")pairs=eligible.slice(0,wanted);
+ else{
+  // Sorteio sem reposição, usando algoritmo parcial de Fisher-Yates.
+  for(let i=0;i<wanted;i++){
+   const j=rand(i,eligible.length-1);
+   [eligible[i],eligible[j]]=[eligible[j],eligible[i]];
+  }
+  pairs=eligible.slice(0,wanted);
  }
- const fmt=n=>formatNumber(n);
- result=op==="add"?x+y:op==="sub"?x-y:op==="mul"?x*y:x/y;
- if(!c.negativeResults&&!c.negativeOperands&&result<0)continue;
- // Sem decimais, a divisão exata deve retornar números inteiros.
- if(!c.decimalOperands&&op==="div"&&!Number.isInteger(result))continue;
- if(c.decimalOperands&&op==="div")result=Math.round(result*10**c.decimalPlaces)/10**c.decimalPlaces;
- result=Number(result.toFixed(8));
- prompt=fmt(x)+sign+(y<0?"("+fmt(y)+")":fmt(y))+" = ?";
- push(prompt,result,op+":"+a+":"+b+":"+(x<0)+":"+(y<0));
-}
+ const symbol={add:" + ",sub:" − ",mul:" × ",div:" ÷ "}[c.operation];
+ for(const [a,b] of pairs){
+  const raw=c.operation==="add"?a+b:c.operation==="sub"?a-b:c.operation==="mul"?a*b:a/b;
+  const ans=Number(raw.toFixed(10));
+  const fmt=x=>formatNumber(x);
+  push(fmt(a)+symbol+(b<0?"("+fmt(b)+")":fmt(b))+" = ?",ans,c.operation+":"+a+":"+b);
+ }
 }
 const old=read(LEGACY);let cfg=normalize(read(STORE)?.cfg||(old?{...defaultCfg,tables:old.tables,exclude:old.excludeFactors,min:old.minMul,max:old.maxMul,format:old.mode==="conventional"?"all":"minimal",showTimer:old.timer}:defaultCfg));
 let memory=read(STORE);if(!memory||typeof memory!=="object")memory={};
@@ -160,7 +159,7 @@ const fractional=(a,b)=>{const g=gcd(Math.abs(a),Math.abs(b));return (a/g)+"/"+(
 function generate(c){
 const out=[],seen=new Set(),L=c.level,method=c.method;
 const push=(prompt,answer,id)=>{if(!seen.has(id||prompt)){seen.add(id||prompt);out.push(p(prompt,answer,id))}};
-if(arithmetic(c.operation)){arithmeticProblems(c,push);return out;}
+if(arithmetic(c.operation)&&(c.operation==="add"||c.operation==="sub"||c.customNumbers)){arithmeticProblems(c,push);return out;}
 if(window.MentalExtra.methods[c.operation]){window.MentalExtra.create(c,push);return out;}
 if(c.operation==="mul"||c.operation==="div"){
 const low=Math.min(c.min,c.max),high=Math.max(c.min,c.max);
