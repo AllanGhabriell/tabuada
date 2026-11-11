@@ -89,7 +89,7 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={presetVersion:3,operation:"mul",method:"free",mode:"intelligent",level:1,tables:[1,2,3,4,5,6,7,8,9,10],exclude:[],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+const defaultCfg={presetVersion:4,essentialStage:"starter",operation:"mul",method:"free",mode:"intelligent",level:1,tables:[2,5],exclude:[],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
 function normalize(c){
 const previous=c&&typeof c==="object"?c:{};
 const legacyDifficulty=!Object.prototype.hasOwnProperty.call(previous,"difficultyPreset");
@@ -97,45 +97,57 @@ c={...clone(defaultCfg),...previous};
 if(legacyDifficulty&&["add","sub","mul","div"].includes(c.operation)){
  const profile=Number(c.level)>=3?"hard":Number(c.level)===2?"balanced":"balanced";
  Object.assign(c,profile==="hard"?{difficultyPreset:"hard",excludeEqual:true,excludeZero:true,excludeOne:true,excludeSmallResults:true}:{difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false});
-}if(!operations.some(x=>x.id===c.operation))c.operation="mul";c.presetVersion=Number(c.presetVersion)||0;if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;
+}if(!operations.some(x=>x.id===c.operation))c.operation="mul";
+if(["add","sub","mul","div"].includes(c.operation)){
+ const known=window.GaussEssentials.stages[c.operation].map(x=>x.id);
+ const original=previous.essentialStage;
+ c.essentialStage=known.includes(original)?original:
+   (previous.quickPreset==="custom"&&Array.isArray(previous.tables)&&c.operation==="mul"?"custom":"starter");
+}
+c.presetVersion=Number(c.presetVersion)||0;if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;
 c.quickPreset=["easy","intermediate","hard","expert","custom"].includes(c.quickPreset)?c.quickPreset:"custom";
 c.customBase=["easy","intermediate","hard","expert"].includes(c.customBase)?c.customBase:null;
 c.difficultyPreset=["basic","balanced","hard","custom"].includes(c.difficultyPreset)?c.difficultyPreset:"balanced";
 for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])c[key]=!!c[key];
 c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;
 if(c.operation==="mul"){
- c.tables=c.tables.filter(x=>x>=1&&x<=10).sort((a,b)=>a-b);
- if(!c.tables.length)c.tables=[1,2,3,4,5,6,7,8,9,10];
+ c.tables=c.tables.filter(x=>x>=2&&x<=9).sort((a,b)=>a-b);
+ if(!c.tables.length)c.tables=[2,5];
  c.customNumbers=false;c.min=1;c.max=10;c.exclude=[];c.format="all";c.allCombos=true;
  c.negativeOperands=false;c.negativeResults=false;c.decimalOperands=false;c.decimalResults=false;
  c.excludeEqual=false;c.excludeZero=false;c.excludeOne=false;c.excludeSmallResults=false;
- c.presetVersion=3;
+ c.presetVersion=4;
 }
+if(c.operation==="div"&&c.essentialStage!=="custom"&&window.GaussEssentials.families[c.essentialStage])c.tables=window.GaussEssentials.families[c.essentialStage];
 return c}
 const PRESET_NAMES={easy:"Fácil",intermediate:"Intermediário",hard:"Difícil",expert:"Superdifícil",custom:"Personalizado"};
 function presetConfig(id,operation,base){
- const c={...clone(base),operation,quickPreset:id,customBase:id,presetVersion:2,method:"free",
+ const c={...clone(base),operation,quickPreset:id,customBase:id,presetVersion:4,method:"free",
+ essentialStage:["add","sub","mul","div"].includes(operation)?(["starter","bridge","all","all"][{easy:0,intermediate:1,hard:2,expert:3}[id]??0]):null,
   allCombos:false,customNumbers:false,decimalOperands:false,decimalResults:false,
   negativeOperands:false,negativeResults:false,decimalPlaces:1,
   excludeEqual:false,excludeZero:false,excludeOne:false,excludeSmallResults:false,difficultyPreset:"basic"};
  const index={easy:0,intermediate:1,hard:2,expert:3}[id]??1;
  if(operation==="mul"){
-  c.tables=index===0?[1,2,3,4,5]:[1,2,3,4,5,6,7,8,9,10];
+  c.essentialStage=["starter","double","relations","all"][index];
+  c.tables=window.GaussEssentials.families[c.essentialStage];
   c.exclude=[];c.min=1;c.max=10;c.customNumbers=false;c.allCombos=true;
-  c.format="all";c.method="free";c.presetVersion=3;
+  c.format="all";c.method="free";c.presetVersion=4;
  }else if(operation==="div"){
+  c.essentialStage=["starter","double","relations","all"][index];
   c.tables=index===0?[2,3,4,5]:index===1?[2,3,4,5,6,7,8,9,10]:index===2?[2,3,4,5,6,7,8,9,10,11,12]:[2,3,4,5,6,7,8,9,10,11,12];
   c.min=1;c.max=index===3?20:10;c.exclude=[];
   c.excludeEqual=index>=1;c.excludeOne=index>=1;c.customNumbers=false;
   c.count=[20,28,36,40][index];c.method="free";
  }else if(operation==="sub"||operation==="add"){
+  c.essentialStage=operation==="sub"?["starter","bridge","equal","all"][index]:["starter","near","bridge","all"][index];
   c.aMin=0;c.bMin=0;
   c.aMax=(operation==="sub"?[10,30,150,500]:[10,50,150,500])[index];
   c.bMax=c.aMax;
   c.count=[20,28,30,36][index];
   c.negativeResults=index>=2;c.negativeOperands=index===3;
   c.decimalOperands=index>=2;c.decimalPlaces=index===3?2:1;
-  c.excludeEqual=index>=1;c.excludeZero=index>=2;c.excludeOne=index>=2;c.excludeSmallResults=index>=2;
+  c.excludeEqual=index>=1;c.excludeZero=true;c.excludeOne=false;c.excludeSmallResults=index>=2;
   c.difficultyPreset=index===0?"basic":index===1?"balanced":"hard";
   c.method=operation==="sub"&&index>=1?"auto":"free";
  }else{
@@ -165,7 +177,9 @@ function allowedByDifficulty(c,a,b,result){
  return true;
 }
 function supportsValue(c,a,b){
- if(c.operation==="div"&&b===0)return false;
+ if((c.operation==="add"||c.operation==="sub")&&(a===0||b===0))return false;
+ if(c.operation==="sub"&&a===b)return false;
+ if(c.operation==="div"&&(b===0||b===1||Math.abs(b)===10||a===0||a/b===1||Math.abs(a/b)===10))return false;
  const value=arithmeticAnswer(c,a,b);
  if(!allowedByDifficulty(c,a,b,value))return false;
  if(!c.negativeResults&&value<0)return false;
@@ -365,8 +379,13 @@ const out=[],seen=new Set(),L=c.level,method=c.method;
 const push=(prompt,answer,id,skill)=>{if(!seen.has(id||prompt)){
  seen.add(id||prompt);const item=p(prompt,answer,id);if(skill)item.skill=skill;out.push(item)
 }};
+if(["add","sub","mul","div"].includes(c.operation)&&c.essentialStage!=="custom"){
+  for(const item of window.GaussEssentials.make(c.operation,c.essentialStage))
+    push(item.prompt,item.answer,item.id,item.skill);
+  return out;
+}
 if(c.operation==="mul"){
- for(const a of c.tables)for(let b=1;b<=10;b++){
+ for(const a of c.tables)for(let b=2;b<=9;b++){
   push(a+" × "+b+" = ?",a*b,"mul:"+a+":"+b,"Tabuada do "+a);
  }
  return out;
