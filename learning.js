@@ -2,6 +2,8 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const STORE="mental_training_v1", LEGACY="tabuada_trainer_v1", THEME="tabuada_theme";
+const PANEL_KEY="mental_panels_v1";
+
 const clone=x=>JSON.parse(JSON.stringify(x)), rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const limit=(x,a,b)=>Math.max(a,Math.min(b,x));
 const read=k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}};
@@ -448,7 +450,6 @@ $("decimalOperands").checked=cfg.decimalOperands;
 $("decimalResults").checked=cfg.decimalResults;
 $("decimalPlaces").value=String(cfg.decimalPlaces);
 $("decimalResults").parentElement.hidden=cfg.operation!=="div";
-updateComboPreview();
 const grid=$("tablesSetting"),excluded=$("excludeSetting");grid.replaceChildren();excluded.replaceChildren();
 for(let n=0;n<=12;n++){
 for(const [host,values,type] of [[grid,cfg.tables,"t"],[excluded,cfg.exclude,"e"]]){
@@ -457,6 +458,7 @@ const input=document.createElement("input");input.type="checkbox";input.value=St
 const txt=document.createElement("span");txt.textContent=n;label.append(input,txt);host.append(label);
 }
 }
+updateComboPreview();
 }
 function settingsDraft(){
  const getNums=group=>[...document.querySelectorAll('input[data-group="'+group+'"]:checked')].map(x=>Number(x.value));
@@ -547,6 +549,12 @@ $("skipAnswer").addEventListener("click",()=>answer(true));
 $("newCycle").addEventListener("click",()=>{startCycle();renderWorkspace()});
 $("btnReview").addEventListener("click",review);
 $("saveSettings").addEventListener("click",applySettings);
+document.querySelectorAll("[data-range]").forEach(button=>button.addEventListener("click",()=>{
+ const max=Number(button.dataset.range);
+ for(const id of ["operandAMin","operandBMin"])$(id).value="0";
+ for(const id of ["operandAMax","operandBMax"])$(id).value=String(max);
+ updateComboPreview();
+}));
 $("settingsModal").addEventListener("change",event=>{
  if(event.target.matches('input,select'))updateComboPreview();
 });
@@ -571,5 +579,11 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelect
 function tick(){const t=$("timeDisplay");if(cfg.showTimer&&page==="workspace"&&!cycle?.complete){t.hidden=false;t.textContent=(current&&!locked?((performance.now()-started)/1000).toFixed(1):"0.0")+"s"}else t.hidden=true;tickHandle=requestAnimationFrame(tick)}
 if(cycle&&cycle.cfg?.operation!==cfg.operation)cycle=null;
 if(cycle&&cycle.complete)current=null;
+const panelDefaults={workspaceOptions:false,workspaceProgress:false};
+let panels={...panelDefaults,...(read(PANEL_KEY)||{})};
+for(const name of ["workspaceOptions","workspaceProgress"]){
+ const el=$(name);el.open=!!panels[name];
+ el.addEventListener("toggle",()=>{panels[name]=el.open;save(PANEL_KEY,panels)});
+}
 showPage("home");tick();
 })();
