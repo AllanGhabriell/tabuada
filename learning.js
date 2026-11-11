@@ -139,11 +139,11 @@ function arithmeticProblems(c,push){
  if(!c.allCombos){
   if(c.method==="comp"){
    const favored=eligible.filter(([a,b])=>Math.min(Math.abs(b)%10,10-(Math.abs(b)%10))<=2);
-   if(favored.length>=c.count)eligible.splice(0,eligible.length,...favored);
+   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
   if(c.operation==="sub"&&c.method==="bridge"){
    const favored=eligible.filter(([a,b])=>a>=10&&b>0&&Math.floor(a/10)!==Math.floor((a-b)/10));
-   if(favored.length>=c.count)eligible.splice(0,eligible.length,...favored);
+   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
  }
  const wanted=c.allCombos?eligible.length:Math.min(c.count,eligible.length);
@@ -459,6 +459,7 @@ $("numberConfig").hidden=!arithmetic(cfg.operation)||(multi&&!cfg.customNumbers)
 $("tableConfig").hidden=!multi||cfg.customNumbers;
 $("countConfig").hidden=multi&&!cfg.customNumbers;
 $("comboConfig").hidden=cfg.operation!=="mul";
+$("levelConfig").hidden=arithmetic(cfg.operation);
 $("rootConfig").hidden=cfg.operation!=="root";
 $("primeConfig").hidden=cfg.operation!=="prime";
 $("countSetting").value=cfg.count;$("levelSetting").value=cfg.level;
