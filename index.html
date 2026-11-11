@@ -830,7 +830,8 @@
       const h=db.history.find(e=>e.id===state.id),s=h||{...state,count:state.items.length,hard:[]};
       const stats=cycleStats(s),previous=db.history.find(e=>e.id!==s.id&&e.type===s.type&&e.count===s.count);
       $("fMaster").textContent=s.count;
-      $("finishHeading").textContent="Ciclo concluído! 🎉";$("fWrong").textContent=s.wrong;$("fAttempts").textContent=s.attempts;
+      $("finishHeading").textContent="Ciclo concluído! 🎉";
+      $("fMaster").parentElement.lastElementChild.textContent=onePass(sessionMode())?"Respondidas":"Dominadas";$("fWrong").textContent=s.wrong;$("fAttempts").textContent=s.attempts;
       $("fAccuracy").textContent=stats.accuracy+"%";$("fAverage").textContent=stats.avg?(stats.avg/1000).toFixed(1)+"s":"—";
       if(previous){
         const delta=stats.accuracy-cycleStats(previous).accuracy;
@@ -912,7 +913,7 @@
       const tables=[],exclude=[];
       for(let i=0;i<=12;i++){if($("t_"+i).checked)tables.push(i);if($("e_"+i).checked)exclude.push(i)}
       if(!tables.length){window.alert("Selecione pelo menos uma tabuada.");return}
-      const newCfg=validConfig({mode:$("modeSelect").value,tables,excludeFactors:exclude,minMul:$("minMul").value,maxMul:$("maxMul").value,timer:$("toggleTimer").checked,autoFocus:$("toggleAutoFocus").checked});
+      const newCfg=validConfig({...cfg,mode:$("modeSelect").value,tables,excludeFactors:exclude,minMul:$("minMul").value,maxMul:$("maxMul").value,timer:$("toggleTimer").checked,autoFocus:$("toggleAutoFocus").checked});
       const generated=problems(newCfg);
       if(!generated.length){window.alert("Esta seleção não produz nenhuma multiplicação. Ajuste os números ignorados ou o intervalo.");return}
       const oldSet=JSON.stringify({mode:cfg.mode,tables:cfg.tables,excludeFactors:cfg.excludeFactors,minMul:cfg.minMul,maxMul:cfg.maxMul});
