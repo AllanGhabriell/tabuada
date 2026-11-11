@@ -320,7 +320,7 @@ if(cycle?.cfg?.operation==="mul"){
   const m=String(item.prompt||"").match(/^([2-9]) × ([2-9]) = \?$/);
   return m&&cfg.operation==="mul"&&cfg.tables.includes(Number(m[1]))&&Number(item.answer)===Number(m[1])*Number(m[2]);
  });
- if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==(cfg.essentialStage==="custom"?cfg.tables.length*8:window.GaussEssentials.make("mul",cfg.essentialStage).length)))cycle=null;
+ if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==(cfg.essentialStage==="custom"?(64-(8-cfg.tables.length)**2):window.GaussEssentials.make("mul",cfg.essentialStage).length)))cycle=null;
 }
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
 const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
@@ -376,7 +376,7 @@ function multiplicationAllowed(item,c=cfg){
  const match=String(item.prompt||"").match(/^([2-9]) × ([2-9]) = \?$/);
  if(!match)return false;
  const a=Number(match[1]),b=Number(match[2]);
- return c.tables.includes(a)&&b>=2&&b<=9&&Number(item.answer)===a*b;
+ return (c.tables.includes(a)||c.tables.includes(b))&&b>=2&&b<=9&&Number(item.answer)===a*b;
 }
 function showMultiplicationPicker(){
  const show=cfg.operation==="mul";
@@ -396,7 +396,7 @@ function showMultiplicationPicker(){
 }
 function updateMulPickerCount(){
  const nums=[...document.querySelectorAll("input[data-mul-table]:checked")].map(x=>Number(x.value));
- $("mulSelectionCount").textContent=nums.length+" tabuada"+(nums.length===1?"":"s")+" · "+(nums.length*8)+" contas";
+ $("mulSelectionCount").textContent=nums.length+" tabuada"+(nums.length===1?"":"s")+" · "+((64-(8-nums.length)**2))+" contas";
  $("mulApply").disabled=nums.length===0;
 }
 
@@ -428,13 +428,19 @@ const push=(prompt,answer,id,skill)=>{if(!seen.has(id||prompt)){
  seen.add(id||prompt);const item=p(prompt,answer,id);if(skill)item.skill=skill;out.push(item)
 }};
 if(["add","sub","mul","div"].includes(c.operation)&&c.essentialStage!=="custom"){
-  for(const item of window.GaussEssentials.make(c.operation,c.essentialStage))
+  for(const item of window.GaussEssentials.make(c.operation,c.essentialStage)){
     push(item.prompt,item.answer,item.id,item.skill);
+    if(c.operation==="mul"){
+     const m=item.prompt.match(/^([2-9]) × ([2-9]) = \?$/);
+     if(m&&m[1]!==m[2])push(m[2]+" × "+m[1]+" = ?",item.answer,"mul:"+m[2]+":"+m[1],item.skill);
+    }
+   }
   return out;
 }
 if(c.operation==="mul"){
  for(const a of c.tables)for(let b=2;b<=9;b++){
   push(a+" × "+b+" = ?",a*b,"mul:"+a+":"+b,"Tabuada do "+a);
+   if(a!==b)push(b+" × "+a+" = ?",a*b,"mul:"+b+":"+a,"Tabuada do "+a);
  }
  return out;
 }
@@ -698,9 +704,9 @@ function multiplicationInsight(item){
  const other=focus===a?b:a,result=a*b;
  const dict={
   9:["Perto do 10",other+" × 10 − "+other+" = "+result],
-  8:["Dobros",other+" × 8 = "+other*2+" × 4 = "+other*4+" × 2 = "+result],
+  8:["Dobros",other+" × 8 = "+(other*2)+" × 4 = "+(other*4)+" × 2 = "+result],
   5:["Metade de 10","("+other+" × 10) ÷ 2 = "+result],
-  4:["Dois dobros",other+" × 4 = "+other*2+" × 2 = "+result],
+  4:["Dois dobros",other+" × 4 = "+(other*2)+" × 2 = "+result],
   6:["Triplo e dobro","("+other+" × 3) × 2 = "+result],
   2:["Dobro",other+" + "+other+" = "+result]
  };
@@ -787,7 +793,7 @@ function answer(skip){
  const first=!current.firstSeen;
  current.firstSeen=true;
  current.attempts++;cycle.answered++;
- const correct=!skip&&answerEquivalent(raw,current.answer);if(correct){if(assistCueShown||assistExpanded||current.hintUsed)assist.helped++;else assist.independent++}
+ const correct=!skip&&answerEquivalent(raw,current.answer);if(correct){if(assistCueShown||assistExpanded)assist.helped++;else assist.independent++}
  let kind="good",message="";
  if(skip){cycle.skips++;current.streak=0;current.wrong++;current.weight=Math.min(25,current.weight*1.6+1);kind="warn";message="Pulou · "+cleanAnswer(current.answer)}
  else if(correct){
@@ -1006,7 +1012,7 @@ $("factorRange").hidden=mul;
 $("countConfig").hidden=mul;
 $("comboConfig").hidden=mul;
 $("tablesHeading").textContent=mul?"Escolha as tabuadas de 1 a 10":"Tabuadas ou divisores";
-$("tablesDescription").textContent=mul?"Cada tabuada selecionada inclui 8 multiplicações, de ×2 até ×9. Zero, um e dez ficam fora dos exercícios.":"Selecione os números que deseja trabalhar.";
+$("tablesDescription").textContent=mul?"As contas aparecem nos dois sentidos, de ×2 até ×9. Zero, um e dez ficam fora dos exercícios.":"Selecione os números que deseja trabalhar.";
 const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
 $("difficultyFilters").hidden=!arithmetic(cfg.operation)||mul;
 $("difficultyPreset").value=cfg.difficultyPreset;
@@ -1069,7 +1075,7 @@ function settingsDraft(){
 function updateComboPreview(){
  const c=settingsDraft();
  const preview=$("comboPreview");
- const len=c.operation==="mul"?c.tables.length*8:arithmeticCount(c);
+ const len=c.operation==="mul"?(64-(8-c.tables.length)**2):arithmeticCount(c);
  preview.textContent=len<0?
  "Intervalo amplo · "+(c.allCombos?"reduza o intervalo para treinar todas":"até "+c.count+" questões sorteadas"):
  len.toLocaleString("pt-BR")+" combinações disponíveis"+
