@@ -10,6 +10,14 @@ const operations=[
 {id:"rulethree",name:"Regra de três",symbol:"∝",group:"Aplicações"}
 ];
 const methods={
+fraction:[
+{id:"free",name:"Livre",guide:["Resolva operações de frações usando o raciocínio apropriado.","Na soma, iguale denominadores; na multiplicação, multiplique numeradores e denominadores.","Simplifique o resultado sempre que possível."]},
+{id:"common",name:"Soma de frações",guide:["Use um denominador comum.","1/2 + 1/4 = 2/4 + 1/4.","Resultado: 3/4."]},
+{id:"subtract",name:"Subtração de frações",guide:["Encontre denominadores comuns.","3/4 − 1/2 = 3/4 − 2/4.","Resultado: 1/4."]},
+{id:"multiply",name:"Multiplicação de frações",guide:["Multiplique numeradores entre si e denominadores entre si.","2/3 × 3/4 = 6/12.","Simplifique: 1/2."]},
+{id:"divide",name:"Divisão de frações",guide:["Multiplique pela fração inversa da segunda.","2/3 ÷ 4/5 = 2/3 × 5/4.","Resultado: 5/6."]},
+{id:"simplify",name:"Simplificar frações",guide:["Divida numerador e denominador pelo mesmo divisor comum.","12/18 = 2/3.","Use o máximo divisor comum quando possível."]}
+],
 signs:[
 {id:"free",name:"Livre",guide:["Observe os sinais antes de calcular.","−7 + 3 = −4.","Em multiplicação e divisão, sinais iguais dão positivo e diferentes dão negativo."]},
 {id:"add",name:"Soma e subtração",guide:["Na soma, sinais iguais: some módulos e conserve o sinal.","Sinais diferentes: subtraia módulos e mantenha o sinal do maior.","5 − (−3) = 8."]},
@@ -58,6 +66,18 @@ const sup=x=>String(x).replace(/\d/g,d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[Number(d)]
 const signed=x=>x<0?"("+x+")":String(x);
 const display=x=>new Intl.NumberFormat("pt-BR",{useGrouping:false,maximumFractionDigits:12}).format(x);
 const add=(prompt,result,i)=>push(prompt,result,c.operation+"-"+i);
+if(c.operation==="fraction"){
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const reduced=(a,b)=>{const d=gcd(Math.abs(a),Math.abs(b));return (a/d)+"/"+(b/d)};
+for(let i=0;i<n;i++){
+ const a=rand(1,7),b=rand(2,9),d=rand(2,8),e=rand(2,9),kind=m==="common"?0:m==="subtract"?1:m==="multiply"?2:m==="divide"?3:m==="simplify"?4:i%5;
+ if(kind===0)add(a+"/"+b+" + "+d+"/"+e+" = ?",reduced(a*e+d*b,b*e),i);
+ if(kind===1)add(a+"/"+b+" − "+d+"/"+e+" = ?",reduced(a*e-d*b,b*e),i);
+ if(kind===2)add(a+"/"+b+" × "+d+"/"+e+" = ?",reduced(a*d,b*e),i);
+ if(kind===3)add(a+"/"+b+" ÷ "+d+"/"+e+" = ?",reduced(a*e,b*d),i);
+ if(kind===4){const k=rand(2,8);add((a*k)+"/"+(b*k)+" = ? (fração simplificada)",reduced(a,b),i)}
+}return;
+}
 if(c.operation==="signs"){
 for(let i=0;i<n;i++){
  const R=[10,30,100][L-1],kind=m==="add"?i%2:m==="multiply"?2+i%2:m==="powers"?4:i%5;
