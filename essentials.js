@@ -21,7 +21,7 @@ const stages={
   {id:"all",name:"Revisão essencial",desc:"Mistura das estratégias",hint:"Escolha o atalho mais eficaz para cada conta."}
  ],
  mul:[
-  {id:"starter",name:"Dobros e múltiplos de 5",desc:"Tabuadas do 2 e do 5",hint:"Use o dobro para a tabuada do 2 e múltiplos de 5 para a do 5."},
+  {id:"starter",name:"Dobros e múltiplos de 5",desc:"Tabuadas do 2 e do 5",hint:"Para ×2, dobre. Para ×5, use metade de ×10. As regras de ×0, ×1 e ×10 são ensinadas sem exercícios repetitivos."},
   {id:"double",name:"Dobros sucessivos",desc:"Tabuadas do 4 e do 8",hint:"Para ×4, dobre duas vezes. Para ×8, dobre três."},
   {id:"relations",name:"Famílias 3, 6 e 9",desc:"Relações entre as tabuadas",hint:"×6 é o dobro de ×3; ×9 pode ser ×10 menos um grupo."},
   {id:"seven",name:"Tabuada do 7",desc:"Consolidação dos fatos",hint:"Relacione 7×8 a 7×4 dobrado ou recupere diretamente."},
