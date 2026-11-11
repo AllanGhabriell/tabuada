@@ -29,3 +29,28 @@
  #workspace>.question-card .answer-form input{padding:11px}
  #workspace>.progress-card{padding:12px 14px}
 }
+
+/* Painéis flexíveis: a resolução continua acima de tudo */
+.workspace-panel{border:1px solid var(--line);border-radius:16px;background:var(--card);margin:10px 0;overflow:hidden}
+.workspace-panel>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-weight:700;font-size:13px;gap:12px;color:var(--text);user-select:none}
+.workspace-panel>summary::-webkit-details-marker{display:none}
+.workspace-panel>summary:hover{background:var(--accentsoft)}
+.workspace-panel .panel-chevron{color:var(--muted);transition:transform .2s}
+.workspace-panel[open] .panel-chevron{transform:rotate(180deg)}
+.workspace-panel .workspace-top,.workspace-panel .progress-card{border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;margin:0;padding:14px 16px;background:transparent}
+.workspace-panel .workspace-top .eyebrow{display:none}
+.workspace-panel .progress-card .eyebrow{display:none}
+.workspace-panel .workspace-top h1{margin:0 0 11px;font-size:16px}
+.workspace-panel .progress-card .progress-track{margin:8px 0}
+.workspace-panel .progress-card .progress-top b{font-size:15px}
+.workspace-panel .progress-card .progress-top strong{font-size:18px}
+.guide-stepbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 9px;color:var(--muted);font-size:12px}
+.guide-meter{height:6px;background:var(--accentsoft);border-radius:99px;overflow:hidden;margin-bottom:13px}
+.guide-meter span{display:block;background:var(--accent);height:100%;width:0;transition:width .2s}
+#guidePractice{border:1px solid var(--line);border-radius:13px;padding:14px;margin:10px 0;background:var(--panel)}
+#guidePracticeQuestion{font-size:20px;font-weight:760;line-height:1.4}
+#guidePracticeResult[data-kind="good"]{color:var(--good)}
+#guidePracticeResult[data-kind="bad"]{color:var(--bad)}
+#comboPreview[data-warning="true"]{color:var(--bad)}
+#operandConfig .field-row{margin-bottom:4px}
+@media(max-width:650px){.workspace-panel>summary{padding:11px 13px}.workspace-panel .workspace-top,.workspace-panel .progress-card{padding:12px 13px}}
