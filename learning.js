@@ -274,7 +274,7 @@ if(!cycle||cycle.cfg.operation!==cfg.operation){if(!startCycle()){createSettings
 options($("modeSelect"),modes,cfg.mode);
 options($("methodSelect"),M[cfg.operation],cfg.method);
 $("moduleTitle").textContent=op().name;$("questionOperation").textContent=op().name.toUpperCase()+" · RESOLVA MENTALMENTE";$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
-$("methodHelp").disabled=cfg.method==="free";
+$("methodHelp").disabled=false;
 $("btnReview").hidden=history.length===0;
 renderProgress();
 if(cycle.complete){renderFinished();return}
@@ -379,12 +379,47 @@ if(cfg.method===id)return;
 if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Trocar a metodologia inicia um novo ciclo. Continuar?")){$("methodSelect").value=cfg.method;return}
 cfg.method=id;if(!startCycle()){createSettings();openModal("settingsModal");return}renderWorkspace();
 }
+let tutorialIndex=0,tutorialSteps=[],tutorialPractice=null;
+function tutorialExample(){
+ if(cfg.operation==="sub"){
+  if(cfg.method==="bridge")return {prompt:"9 − 6 = ?",answer:3};
+  if(cfg.method==="comp")return {prompt:"83 − 47 = ?",answer:36};
+  return {prompt:"15 − 7 = ?",answer:8};
+ }
+ if(cfg.operation==="root")return {prompt:"√50 ≈ ? (1 decimal)",answer:7.1};
+ if(cfg.operation==="mul")return {prompt:"7 × 8 = ?",answer:56};
+ if(cfg.operation==="add")return {prompt:"47 + 38 = ?",answer:85};
+ const sample=cycle?.items?.find(item=>!item.done)||cycle?.items?.[0];
+ return sample?{prompt:sample.prompt,answer:sample.answer}:null;
+}
+function updateGuide(){
+ const total=tutorialSteps.length+1,stage=tutorialIndex+1;
+ $("guideSteps").replaceChildren();
+ $("guidePractice").hidden=tutorialIndex!==tutorialSteps.length;
+ $("guideStepCounter").textContent="Etapa "+stage+" de "+total;
+ $("guideStepPercent").textContent=Math.round(stage/total*100)+"%";
+ $("guideStepFill").style.width=(stage/total*100)+"%";
+ $("guidePrev").disabled=tutorialIndex===0;
+ $("guideNext").textContent=tutorialIndex>=tutorialSteps.length?"Recomeçar":"Próximo";
+ if(tutorialIndex<tutorialSteps.length){
+  const row=document.createElement("div");row.className="guide-step";
+  const num=document.createElement("span");num.textContent=stage;
+  const content=document.createElement("p");content.textContent=tutorialSteps[tutorialIndex];
+  row.append(num,content);$("guideSteps").append(row);
+ }else{
+  $("guidePracticeQuestion").textContent=tutorialPractice?("Agora pratique: "+tutorialPractice.prompt):"Experimente o método no exercício seguinte.";
+ }
+}
 function displayGuide(){
-const m=method(),el=$("guideSteps");el.replaceChildren();
-$("guideTitle").textContent=m.name;
-m.guide.forEach((step,i)=>{const row=document.createElement("div");row.className="guide-step";const num=document.createElement("span");num.textContent=i+1;const text=document.createElement("p");text.textContent=step;row.append(num,text);el.append(row)});
-$("guideNote").textContent=m.id==="free"?"Experimente suas próprias estratégias.":"Você pode resolver de outra maneira. O tutorial apenas apresenta uma possibilidade.";
-openModal("guideModal");
+ const m=method();
+ tutorialIndex=0;tutorialSteps=m.guide.slice();
+ tutorialPractice=tutorialExample();
+ $("guideTitle").textContent=m.name;
+ $("guidePracticeAnswer").value="";$("guidePracticeResult").textContent="";
+ $("guideNote").textContent="Use esta explicação como apoio. Você pode construir a resposta de outra maneira.";
+ $("guidePracticeAnswer").disabled=!tutorialPractice;
+ $("guideCheck").disabled=!tutorialPractice;
+ updateGuide();openModal("guideModal");
 }
 function openModal(id){$(id).hidden=false}
 function closeModal(id){$(id).hidden=true}
@@ -498,6 +533,15 @@ $("btnReset").addEventListener("click",()=>{if(cycle&&!cycle.complete&&cycle.ans
 $("methodSelect").addEventListener("change",e=>changeMethod(e.target.value));
 $("modeSelect").addEventListener("change",e=>changeMode(e.target.value));
 $("methodHelp").addEventListener("click",displayGuide);
+$("guidePrev").addEventListener("click",()=>{tutorialIndex=Math.max(0,tutorialIndex-1);updateGuide()});
+$("guideNext").addEventListener("click",()=>{tutorialIndex=tutorialIndex>=tutorialSteps.length?0:tutorialIndex+1;updateGuide()});
+$("guideCheck").addEventListener("click",()=>{
+ if(!tutorialPractice)return;
+ const correct=answerEquivalent($("guidePracticeAnswer").value,tutorialPractice.answer);
+ $("guidePracticeResult").textContent=correct?"Correto! Você aplicou o raciocínio.":"Tente novamente. Releia as etapas se precisar.";
+ $("guidePracticeResult").dataset.kind=correct?"good":"bad";
+});
+
 $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer(false)});
 $("skipAnswer").addEventListener("click",()=>answer(true));
 $("newCycle").addEventListener("click",()=>{startCycle();renderWorkspace()});
