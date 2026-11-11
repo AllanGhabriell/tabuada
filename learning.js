@@ -238,6 +238,19 @@ let profiles=memory.profiles&&typeof memory.profiles==="object"?memory.profiles:
 profiles[cfg.operation]=clone(cfg);
 let history=Array.isArray(memory.history)?memory.history.slice(0,150):[];
 let cycle=memory.cycle&&Array.isArray(memory.cycle.items)?memory.cycle:null;
+function migrateCycle(c){
+ if(!c||c.cycleVersion===2)return c;
+ c.cycleVersion=2;c.reviewLimit=2;c.answered=Number(c.answered)||0;
+ for(const item of c.items){
+   item.firstSeen=Number(item.attempts)>0;
+   item.reviews=Math.min(2,Math.max(0,(Number(item.attempts)||0)-1));
+   item.mastered=!!item.done&&Number(item.correct)>0;
+   item.reviewStreak=Number(item.streak)||0;
+   if(item.firstSeen&&!item.done&&item.reviews>=2)item.done=true;
+ }
+ return c;
+}
+cycle=migrateCycle(cycle);
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
 const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
 let mobileNativeKeyboard=false;
@@ -260,7 +273,8 @@ function renderMethodCards(){
  $("selectedMethodName").textContent=method().name;
 $("compactMethod").textContent=method().name;
 }
-const p=(prompt,answer,id)=>({id:id||prompt,prompt,answer,weight:1,streak:0,attempts:0,wrong:0,correct:0,done:false,time:0});
+const p=(prompt,answer,id)=>({id:id||prompt,prompt,answer,weight:1,streak:0,
+ attempts:0,wrong:0,correct:0,done:false,firstSeen:false,mastered:false,reviews:0,reviewStreak:0,time:0,hintUsed:false});
 const formatNumber=x=>new Intl.NumberFormat("pt-BR",{useGrouping:false,maximumFractionDigits:12}).format(x);
 const isPrime=n=>{if(n<2)return false;for(let k=2;k*k<=n;k++)if(n%k===0)return false;return true};
 const gcd=(a,b)=>b?gcd(b,a%b):a;
@@ -342,7 +356,9 @@ function startCycle(){
 if(nextTimeout)clearTimeout(nextTimeout);
 let items;try{items=generate(cfg)}catch(err){notify(err.message);return false}
 if(!items.length){notify("Essa seleção não gerou contas. Ajuste as configurações.");return false}
-cycle={id:Date.now(),cfg:clone(cfg),items,answered:0,correct:0,wrong:0,skips:0,totalMs:0,created:new Date().toISOString(),last:null,complete:false};
+cycle={id:Date.now(),cycleVersion:2,cfg:clone(cfg),items,
+ answered:0,correct:0,wrong:0,skips:0,totalMs:0,firstPassCorrect:0,hints:0,
+ reviewLimit:single(cfg.mode)?0:2,created:new Date().toISOString(),last:null,complete:false};
 current=null;persist();return true;
 }
 function persist(){profiles[cfg.operation]=clone(cfg);save(STORE,{cfg,cycle,history,profiles})}
@@ -410,29 +426,57 @@ renderProgress();
 if(cycle.complete){renderFinished();return}
 showQuestion();
 }
+function cycleStatus(){
+ const all=cycle.items;
+ const mastered=all.filter(x=>x.mastered).length;
+ const unseen=all.filter(x=>!x.firstSeen).length;
+ const reviewed=all.filter(x=>x.firstSeen&&!x.mastered&&!x.done).length;
+ const unresolved=all.filter(x=>x.firstSeen&&!x.mastered&&x.done).length;
+ return {total:all.length,mastered,unseen,reviewed,unresolved,
+   seen:all.length-unseen,
+   settled:mastered+unresolved,
+   completed:unseen===0&&reviewed===0};
+}
 function renderProgress(){
-const n=cycle.items.length,done=cycle.items.filter(x=>x.done).length;
-const percentage=n?Math.round(done*100/n):0;
-$("progressText").textContent=done+" de "+n;
-$("progressRemaining").textContent=(n-done)+" restantes";
-$("progressPercent").textContent=percentage+"%";
-$("compactProgress").textContent=percentage+"%";
-$("progressFill").style.width=percentage+"%";
-$("progressTrack").setAttribute("aria-valuenow",percentage);
-$("statCorrect").textContent=cycle.correct;
-$("statWrong").textContent=cycle.wrong;
-$("statAttempts").textContent=cycle.answered;
-$("progressDescription").textContent=single(cfg.mode)?"Questões respondidas":"Questões dominadas";
+ const status=cycleStatus();
+ const percentage=status.total?Math.round(status.settled*100/status.total):0;
+ const label=status.settled+" de "+status.total+" finalizadas";
+ $("progressText").textContent=label;
+ $("progressRemaining").textContent=status.unseen+" novas · "+status.reviewed+" revisar";
+ $("progressPercent").textContent=percentage+"%";
+ $("compactProgress").textContent=percentage+"%";
+ $("progressFill").style.width=percentage+"%";
+ $("progressTrack").setAttribute("aria-valuenow",percentage);
+ $("statCorrect").textContent=cycle.correct;
+ $("statWrong").textContent=cycle.wrong;
+ $("statAttempts").textContent=cycle.answered;
+ $("progressMastered").textContent=status.mastered;
+ $("progressPending").textContent=status.unresolved+status.reviewed;
+ $("progressDescription").textContent="Questões encerradas neste ciclo";
+ $("cycleStage").textContent=status.unseen?"ETAPA 1 · QUESTÕES NOVAS":status.reviewed?"ETAPA 2 · REVISÃO":"CICLO FINALIZADO";
+ $("cycleMiniCount").textContent=status.settled+"/"+status.total;
+ $("cycleMiniFill").style.width=percentage+"%";
+ $("miniMastered").textContent=status.mastered;
+ $("miniNew").textContent=status.unseen;
+ $("miniReview").textContent=status.reviewed+status.unresolved;
 }
 function choose(){
-const items=cycle.items.filter(x=>!x.done);
-if(!items.length)return null;
-if(cfg.mode==="sequential")return items[0];
-const pool=items.length>1?items.filter(x=>x.id!==cycle.last):items;
-if(cfg.mode==="random"||cfg.mode==="fluency")return pool[rand(0,pool.length-1)];
-const w=pool.map(x=>Math.max(.25,x.weight));let r=Math.random()*w.reduce((a,b)=>a+b,0);
-for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}
-return pool[pool.length-1];
+ const unseen=cycle.items.filter(x=>!x.firstSeen);
+ if(unseen.length){
+  if(cfg.mode==="sequential"||cfg.mode==="learning")return unseen[0];
+  const candidates=unseen.length>1?unseen.filter(x=>x.id!==cycle.last):unseen;
+  return candidates[rand(0,candidates.length-1)];
+ }
+ if(single(cfg.mode))return null;
+ const review=cycle.items.filter(x=>x.firstSeen&&!x.done&&x.reviews<cycle.reviewLimit);
+ if(!review.length)return null;
+ const candidates=review.length>1?review.filter(x=>x.id!==cycle.last):review;
+ if(cfg.mode==="intelligent"){
+  let total=0,weights=candidates.map(x=>{const w=Math.max(1,x.wrong*2+(2-x.reviewStreak));total+=w;return w});
+  let r=Math.random()*total;
+  for(let i=0;i<candidates.length;i++){r-=weights[i];if(r<=0)return candidates[i]}
+ }
+ return candidates[0];
 }
 function strategyForQuestion(item){
  if(!item)return "";
@@ -495,22 +539,43 @@ const val=Number(input);
 return Math.abs(val-expected)<=1e-7;
 }
 function answer(skip){
-if(locked||!current)return;
-const raw=$("answer").value.trim();
-if(!skip&&!raw){$("answer").focus();return}
-if(!skip&&!answerLooksValid(raw)){notify("Digite uma resposta numérica válida ou sim/não.");return}
-locked=true;
-const ms=Math.max(0,performance.now()-started);current.attempts++;cycle.answered++;
-let kind="good",message="";
-if(skip){cycle.skips++;current.streak=0;current.weight=Math.min(25,current.weight*1.6+1);kind="warn";message="Pulou · "+cleanAnswer(current.answer)}
-else if(answerEquivalent(raw,current.answer)){current.correct++;cycle.correct++;cycle.totalMs+=ms;current.time+=ms;current.streak++;current.weight=Math.max(.25,current.weight*.72);message="Correto!";
-}else{cycle.wrong++;current.wrong++;cycle.totalMs+=ms;current.time+=ms;current.streak=0;current.weight=Math.min(25,current.weight*2.4+1.2);kind="bad";message="Resposta: "+cleanAnswer(current.answer)}
-if(single(cfg.mode)||current.streak>=(cfg.mode==="learning"?2:3))current.done=true;
-$("feedback").textContent=message;$("feedback").dataset.kind=kind;
-$("answer").disabled=true;$("submitAnswer").disabled=true;$("skipAnswer").disabled=true;
-renderProgress();persist();
-if(nextTimeout)clearTimeout(nextTimeout);
-nextTimeout=setTimeout(()=>{nextTimeout=0;current=null;if(cycle.items.every(x=>x.done))finish();else showQuestion()},kind==="bad"?1350:kind==="warn"?1100:750);
+ if(locked||!current)return;
+ const raw=$("answer").value.trim();
+ if(!skip&&!raw){$("answer").focus();return}
+ if(!skip&&!answerLooksValid(raw)){notify("Digite uma resposta numérica válida ou sim/não.");return}
+ locked=true;
+ const ms=Math.max(0,performance.now()-started);
+ const first=!current.firstSeen;
+ current.firstSeen=true;
+ current.attempts++;cycle.answered++;
+ const correct=!skip&&answerEquivalent(raw,current.answer);
+ let kind="good",message="";
+ if(skip){cycle.skips++;current.streak=0;current.wrong++;current.weight=Math.min(25,current.weight*1.6+1);kind="warn";message="Pulou · "+cleanAnswer(current.answer)}
+ else if(correct){
+  current.correct++;cycle.correct++;cycle.totalMs+=ms;current.time+=ms;
+  current.streak++;current.weight=Math.max(.25,current.weight*.72);message="Correto!";
+ }else{
+  cycle.wrong++;current.wrong++;cycle.totalMs+=ms;current.time+=ms;
+  current.streak=0;current.weight=Math.min(25,current.weight*2.4+1.2);
+  kind="bad";message="Resposta: "+cleanAnswer(current.answer);
+ }
+ if(first){
+  if(correct){cycle.firstPassCorrect++;current.mastered=true;current.done=true}
+  else if(single(cfg.mode)){current.done=true}
+ }else{
+  current.reviews++;
+  current.reviewStreak=correct?current.reviewStreak+1:0;
+  if(current.reviewStreak>=2){current.mastered=true;current.done=true}
+  if(current.reviews>=cycle.reviewLimit)current.done=true;
+ }
+ $("feedback").textContent=message;$("feedback").dataset.kind=kind;
+ $("answer").disabled=true;$("submitAnswer").disabled=true;$("skipAnswer").disabled=true;
+ renderProgress();persist();
+ if(nextTimeout)clearTimeout(nextTimeout);
+ nextTimeout=setTimeout(()=>{
+  nextTimeout=0;current=null;
+  if(cycleStatus().completed)finish();else showQuestion();
+ },kind==="bad"?1200:kind==="warn"?950:650);
 }
 function cleanAnswer(ans){return String(ans).replace(".",",")}
 function answerLooksValid(s){return /^-?\d+(?:[.,]\d+)?$/.test(s.trim())||/^(-?\d+)\/([1-9]\d*)$/.test(s.trim())||/^(sim|s|não|nao|n|yes|no)$/i.test(s.trim())}
