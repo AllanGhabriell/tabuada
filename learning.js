@@ -209,7 +209,7 @@ function renderWorkspace(){
 if(!cycle||cycle.cfg.operation!==cfg.operation){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 options($("modeSelect"),modes,cfg.mode);
 options($("methodSelect"),M[cfg.operation],cfg.method);
-$("moduleTitle").textContent=op().name;$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
+$("moduleTitle").textContent=op().name;$("questionOperation").textContent=op().name.toUpperCase()+" · RESOLVA MENTALMENTE";$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
 $("methodHelp").disabled=cfg.method==="free";
 $("btnReview").hidden=history.length===0;
 renderProgress();
