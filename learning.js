@@ -580,22 +580,48 @@ function answer(skip){
 function cleanAnswer(ans){return String(ans).replace(".",",")}
 function answerLooksValid(s){return /^-?\d+(?:[.,]\d+)?$/.test(s.trim())||/^(-?\d+)\/([1-9]\d*)$/.test(s.trim())||/^(sim|s|não|nao|n|yes|no)$/i.test(s.trim())}
 function finish(){
-if(!cycle.complete){
-cycle.complete=true;
-history.unshift({id:cycle.id,operation:cfg.operation,mode:cfg.mode,method:cfg.method,ended:new Date().toISOString(),count:cycle.items.length,correct:cycle.correct,wrong:cycle.wrong,skips:cycle.skips,answered:cycle.answered,avg:cycle.correct+cycle.wrong?cycle.totalMs/(cycle.correct+cycle.wrong):0,hard:cycle.items.filter(x=>x.wrong||x.attempts>3).map(x=>({id:x.id,prompt:x.prompt,answer:x.answer,weight:1,streak:0,attempts:0,wrong:0,correct:0,done:false,time:0})).slice(0,40)});
-history=history.slice(0,150);persist();
-}
-renderFinished();
+ if(!cycle.complete){
+  cycle.complete=true;
+  const status=cycleStatus();
+  history.unshift({
+   id:cycle.id,operation:cfg.operation,mode:cfg.mode,method:cfg.method,
+   level:cfg.quickPreset,ended:new Date().toISOString(),count:status.total,
+   mastered:status.mastered,pending:status.unresolved,firstPassCorrect:cycle.firstPassCorrect||0,
+   hints:cycle.hints||0,correct:cycle.correct,wrong:cycle.wrong,skips:cycle.skips,
+   answered:cycle.answered,
+   avg:cycle.correct+cycle.wrong?cycle.totalMs/(cycle.correct+cycle.wrong):0,
+   hard:cycle.items.filter(x=>!x.mastered||x.wrong||x.attempts>2).map(x=>({
+     id:x.id,prompt:x.prompt,answer:x.answer,weight:1,streak:0,attempts:0,wrong:0,
+     correct:0,done:false,firstSeen:false,mastered:false,reviews:0,reviewStreak:0,time:0
+   })).slice(0,150)
+  });
+  history=history.slice(0,150);persist();
+ }
+ renderFinished();
 }
 function renderFinished(){
-$("trainingArea").hidden=true;$("summaryArea").hidden=false;
-$("mobileInputArea").hidden=true;
-$("summaryTitle").textContent="Ciclo concluído";
-$("endCount").textContent=cycle.items.length;
-$("endCorrect").textContent=cycle.correct;
-$("endAccuracy").textContent=cycle.correct+cycle.wrong?Math.round(cycle.correct*100/(cycle.correct+cycle.wrong))+"%":"—";
-$("endAvg").textContent=cycle.correct+cycle.wrong?(cycle.totalMs/(cycle.correct+cycle.wrong)/1000).toFixed(1).replace(".",",")+"s":"—";
-renderProgress();
+ $("trainingArea").hidden=true;$("summaryArea").hidden=false;
+ $("mobileInputArea").hidden=true;
+ const status=cycleStatus();
+ $("summaryTitle").textContent="Ciclo concluído!";
+ $("endCount").textContent=status.total;
+ $("endCorrect").textContent=status.mastered;
+ $("endAccuracy").textContent=status.total?Math.round((cycle.firstPassCorrect||0)*100/status.total)+"%":"—";
+ $("endAvg").textContent=cycle.correct+cycle.wrong?(cycle.totalMs/(cycle.correct+cycle.wrong)/1000).toFixed(1).replace(".",",")+"s":"—";
+ $("summaryOutcome").textContent=status.mastered+" dominadas · "+status.unresolved+
+ " para revisar em outra sessão. Precisão inicial: "+$("endAccuracy").textContent+".";
+ $("reviewCompleted").disabled=status.unresolved===0;
+ renderProgress();
+}
+function startPendingReview(items){
+ if(!items.length){notify("Não há questões pendentes para revisar.");return}
+ if(nextTimeout){clearTimeout(nextTimeout);nextTimeout=0}
+ cfg.mode="learning";
+ cycle={id:Date.now(),cycleVersion:2,cfg:clone(cfg),
+  items:items.map(x=>({...p(x.prompt,x.answer,x.id),weight:2})),
+  answered:0,correct:0,wrong:0,skips:0,totalMs:0,firstPassCorrect:0,
+  hints:0,reviewLimit:2,created:new Date().toISOString(),last:null,complete:false};
+ current=null;persist();showPage("workspace");
 }
 function changeMode(mode){
 if(cfg.mode===mode)return;
@@ -776,10 +802,10 @@ function applySettings(){
  persist();closeModal("settingsModal");renderWorkspace();
 }
 function review(){
-const source=history.find(x=>x.operation===cfg.operation&&Array.isArray(x.hard)&&x.hard.length);
-if(!source){notify("Ainda não há dificuldades registradas para este módulo.");return}
-if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Iniciar uma revisão e substituir o ciclo atual?"))return;
-cfg.mode="intelligent";startCycle();cycle.items=source.hard.map(x=>({...x,done:false,weight:2,streak:0,attempts:0,correct:0,wrong:0,time:0}));persist();renderWorkspace();
+ const last=history.find(x=>x.operation===cfg.operation&&Array.isArray(x.hard)&&x.hard.length);
+ if(!last){notify("Ainda não há dificuldades registradas para este módulo.");return}
+ if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Iniciar revisão e substituir o ciclo atual?"))return;
+ startPendingReview(last.hard);
 }
 function historyView(){
 const el=$("historyList");el.replaceChildren();
@@ -787,7 +813,12 @@ if(!history.length){const text=document.createElement("p");text.textContent="Nen
 for(const h of history.slice(0,30)){
 const div=document.createElement("div");div.className="history-record";
 const b=document.createElement("b");b.textContent=(operations.find(x=>x.id===h.operation)?.name||h.operation)+" · "+h.count+" questões";
-const small=document.createElement("small");small.textContent=new Date(h.ended).toLocaleDateString("pt-BR")+" · "+(h.correct+h.wrong?Math.round(h.correct*100/(h.correct+h.wrong))+"%":"—")+" precisão";
+const small=document.createElement("small");
+const pct=h.firstPassCorrect!==undefined&&h.count?Math.round(h.firstPassCorrect*100/h.count):
+(h.correct+h.wrong?Math.round(h.correct*100/(h.correct+h.wrong))+"%":"—");
+small.textContent=new Date(h.ended).toLocaleDateString("pt-BR")+" · "+
+(h.mastered??"—")+" dominadas · "+(h.pending??"—")+" pendentes · "+
+(pct==="—"?pct:pct+"%")+" precisão inicial";
 div.append(b,small);el.append(div)
 }
 openModal("historyModal");
@@ -809,6 +840,7 @@ $("modeSelect").addEventListener("change",e=>changeMode(e.target.value));
 $("methodHelp").addEventListener("click",displayGuide);
 $("btnStrategyHint").addEventListener("click",()=>{
  const note=$("strategyHintText");note.hidden=!note.hidden;
+ if(!note.hidden&&current&&!current.hintUsed){current.hintUsed=true;cycle.hints=(cycle.hints||0)+1;persist()}
  $("btnStrategyHint").setAttribute("aria-expanded",String(!note.hidden));
 });
 $("guidePrev").addEventListener("click",()=>{tutorialIndex=Math.max(0,tutorialIndex-1);updateGuide()});
@@ -853,7 +885,10 @@ $("mobileKeyboardToggle").addEventListener("click",()=>{
 if(typeof mobileView.addEventListener==="function")mobileView.addEventListener("change",mobileInputMode);
 $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer(false)});
 $("skipAnswer").addEventListener("click",()=>answer(true));
-$("newCycle").addEventListener("click",()=>{startCycle();renderWorkspace()});
+$("newCycle").addEventListener("click",()=>{if(startCycle())renderWorkspace()});
+$("reviewCompleted").addEventListener("click",()=>startPendingReview(cycle.items.filter(x=>!x.mastered)));
+$("summaryHome").addEventListener("click",()=>showPage("home"));
+$("summaryAnother").addEventListener("click",()=>showPage("home"));
 $("btnReview").addEventListener("click",review);
 $("saveSettings").addEventListener("click",applySettings);
 $("toggleAdvanced").addEventListener("click",()=>{
