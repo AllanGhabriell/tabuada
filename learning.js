@@ -532,6 +532,7 @@ function openModal(id){$(id).hidden=false}
 function closeModal(id){$(id).hidden=true}
 function notify(msg){$("toast").textContent=msg;$("toast").hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$("toast").hidden=true,3500)}
 let draftPreset="intermediate";
+let pendingPresetConfig=null;
 let advancedOpen=false;
 function renderPresetSelection(){
  for(const button of document.querySelectorAll("[data-preset]")){
@@ -552,6 +553,7 @@ function fillPresetForm(c){
 }
 function createSettings(){
 draftPreset=cfg.quickPreset||"intermediate";
+pendingPresetConfig=null;
 renderPresetSelection();
 $("advancedSettings").hidden=!advancedOpen;
 $("toggleAdvanced").setAttribute("aria-expanded",String(advancedOpen));
@@ -594,7 +596,7 @@ updateComboPreview();
 }
 function settingsDraft(){
  const getNums=group=>[...document.querySelectorAll('input[data-group="'+group+'"]:checked')].map(x=>Number(x.value));
- return normalize({...cfg,level:Number($("levelSetting").value),count:Number($("countSetting").value),
+ return normalize({...cfg,...(pendingPresetConfig||{}),level:Number($("levelSetting").value),count:Number($("countSetting").value),
  min:Number($("minSetting").value),max:Number($("maxSetting").value),
  format:$("formatSetting").value,rootType:$("rootSetting").value,primeType:$("primeSetting").value,
  showTimer:$("timerSetting").checked,autofocus:$("focusSetting").checked,
@@ -698,6 +700,7 @@ for(const button of document.querySelectorAll("[data-preset]")){
  button.addEventListener("click",()=>{
   const next=presetConfig(button.dataset.preset,cfg.operation,cfg);
   draftPreset=button.dataset.preset;
+  pendingPresetConfig=next;
   fillPresetForm(next);renderPresetSelection();
   // A opção pronta pode ser iniciada imediatamente, sem passar pelos controles avançados.
   applySettings();
