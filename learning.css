@@ -8,3 +8,24 @@
 @media(max-width:650px){.app-shell{width:calc(100% - 20px);margin:10px auto 28px}.topbar{padding:12px;border-radius:16px}.brand small{font-size:10px}.top-actions{gap:5px}.top-actions button{padding:7px 8px;font-size:12px}.modules-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.module-tile{min-height:105px;padding:14px}.page-title{font-size:26px}.workspace-top,.progress-card{padding:15px}.choice-grid{grid-template-columns:1fr}.question-card{padding:16px;min-height:310px}.result-grid{grid-template-columns:repeat(2,1fr)}.number-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.field-row{grid-template-columns:1fr 1fr}.modal-body{padding:15px}.modal-footer{padding:12px 15px;flex-wrap:wrap}.method-explain{align-items:flex-start}.brand-icon{width:34px;height:34px;font-size:21px}.brand strong{font-size:14px}}
 @media(max-width:350px){.topbar{flex-wrap:wrap}.top-actions{width:100%;justify-content:flex-end}.field-row{grid-template-columns:1fr}}
 @media(hover:none),(pointer:coarse){.ambient-glow{display:none}.number-option:hover{transform:none}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}.ambient-glow{display:none}}
+
+/* A operação é a primeira informação visível: opções ficam abaixo do exercício. */
+#workspace>.question-card{margin-bottom:12px;min-height:320px;padding:24px 20px;gap:13px}
+#workspace>.question-card #problem{margin:6px 0 4px;font-size:clamp(36px,7vw,62px)}
+#workspace>.question-card .question-head{margin-bottom:0}
+#workspace>.question-card .answer-form{gap:9px}
+#workspace>.question-card .answer-form input{padding:13px}
+#workspace>.progress-card{padding:13px 18px;margin-bottom:12px}
+#workspace>.progress-card .progress-track{margin:8px 0 6px}
+#workspace>.progress-card .progress-top b{font-size:15px}
+#workspace>.progress-card .progress-top strong{font-size:18px}
+#workspace>.workspace-top{padding:15px 18px;margin-bottom:12px}
+#workspace>.workspace-top h1{font-size:17px;margin:2px 0 12px}
+#workspace>.workspace-top .eyebrow{font-size:9px}
+#workspace>.workspace-top .method-explain{margin-top:8px}
+@media(max-width:650px){
+ #workspace>.question-card{min-height:290px;padding:17px 13px;gap:11px}
+ #workspace>.question-card #problem{margin:4px 0;font-size:clamp(30px,9vw,48px)}
+ #workspace>.question-card .answer-form input{padding:11px}
+ #workspace>.progress-card{padding:12px 14px}
+}
