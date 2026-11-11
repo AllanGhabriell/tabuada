@@ -391,7 +391,13 @@ function closeModal(id){$(id).hidden=true}
 function notify(msg){$("toast").textContent=msg;$("toast").hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$("toast").hidden=true,3500)}
 function createSettings(){
 const multi=cfg.operation==="mul"||cfg.operation==="div";
-$("tableConfig").hidden=!multi;$("countConfig").hidden=multi;
+const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
+$("customRangeConfig").hidden=!multi;
+$("customNumbers").checked=cfg.customNumbers;
+$("operandConfig").hidden=!personalized;
+$("numberConfig").hidden=!arithmetic(cfg.operation);
+$("tableConfig").hidden=!multi||cfg.customNumbers;
+$("countConfig").hidden=multi&&!cfg.customNumbers;
 $("comboConfig").hidden=cfg.operation!=="mul";
 $("rootConfig").hidden=cfg.operation!=="root";
 $("primeConfig").hidden=cfg.operation!=="prime";
@@ -399,6 +405,15 @@ $("countSetting").value=cfg.count;$("levelSetting").value=cfg.level;
 $("minSetting").value=cfg.min;$("maxSetting").value=cfg.max;
 $("formatSetting").value=cfg.format;$("rootSetting").value=cfg.rootType;$("primeSetting").value=cfg.primeType;
 $("timerSetting").checked=cfg.showTimer;$("focusSetting").checked=cfg.autofocus;
+for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=cfg[k];
+$("allCombos").checked=cfg.allCombos;
+$("negativeResults").checked=cfg.negativeResults;
+$("negativeOperands").checked=cfg.negativeOperands;
+$("decimalOperands").checked=cfg.decimalOperands;
+$("decimalResults").checked=cfg.decimalResults;
+$("decimalPlaces").value=String(cfg.decimalPlaces);
+$("decimalResults").parentElement.hidden=cfg.operation!=="div";
+updateComboPreview();
 const grid=$("tablesSetting"),excluded=$("excludeSetting");grid.replaceChildren();excluded.replaceChildren();
 for(let n=0;n<=12;n++){
 for(const [host,values,type] of [[grid,cfg.tables,"t"],[excluded,cfg.exclude,"e"]]){
@@ -408,15 +423,48 @@ const txt=document.createElement("span");txt.textContent=n;label.append(input,tx
 }
 }
 }
+function settingsDraft(){
+ const getNums=group=>[...document.querySelectorAll('input[data-group="'+group+'"]:checked')].map(x=>Number(x.value));
+ return normalize({...cfg,level:Number($("levelSetting").value),count:Number($("countSetting").value),
+ min:Number($("minSetting").value),max:Number($("maxSetting").value),
+ format:$("formatSetting").value,rootType:$("rootSetting").value,primeType:$("primeSetting").value,
+ showTimer:$("timerSetting").checked,autofocus:$("focusSetting").checked,
+ tables:getNums("t"),exclude:getNums("e"),
+ customNumbers:$("customNumbers").checked,
+ aMin:$("operandAMin").value,aMax:$("operandAMax").value,
+ bMin:$("operandBMin").value,bMax:$("operandBMax").value,
+ allCombos:$("allCombos").checked,
+ negativeResults:$("negativeResults").checked,
+ negativeOperands:$("negativeOperands").checked,
+ decimalOperands:$("decimalOperands").checked,
+ decimalResults:$("decimalResults").checked,
+ decimalPlaces:$("decimalPlaces").value});
+}
+function updateComboPreview(){
+ const c=settingsDraft();
+ const preview=$("comboPreview");
+ const len=arithmeticCount(c);
+ preview.textContent=len.toLocaleString("pt-BR")+" combinações disponíveis"+
+ (c.allCombos?" · ciclo completo":(" · até "+Math.min(c.count,len)+" por ciclo"));
+ preview.dataset.warning=c.allCombos&&len>10000?"true":"false";
+ if(cfg.operation==="mul"||cfg.operation==="div"){
+  $("operandConfig").hidden=!c.customNumbers;
+  $("tableConfig").hidden=c.customNumbers;
+  $("countConfig").hidden=!c.customNumbers;
+ }
+ $("decimalPlaces").disabled=!c.decimalOperands&&!c.decimalResults;
+}
 function applySettings(){
-const getNums=group=>[...document.querySelectorAll('input[data-group="'+group+'"]:checked')].map(x=>Number(x.value));
-const next=normalize({...cfg,level:Number($("levelSetting").value),count:Number($("countSetting").value),min:Number($("minSetting").value),max:Number($("maxSetting").value),format:$("formatSetting").value,rootType:$("rootSetting").value,primeType:$("primeSetting").value,showTimer:$("timerSetting").checked,autofocus:$("focusSetting").checked,tables:getNums("t"),exclude:getNums("e")});
-if((cfg.operation==="mul"||cfg.operation==="div")&&!next.tables.length){notify("Selecione pelo menos uma tabuada.");return}
-const changed=JSON.stringify({...cfg,showTimer:false,autofocus:false})!==JSON.stringify({...next,showTimer:false,autofocus:false});
-if(changed&&cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Essas alterações iniciam outro ciclo. Continuar?"))return;
-cfg=next;
-if(changed&&!startCycle()){createSettings();return}
-persist();closeModal("settingsModal");renderWorkspace();
+ const next=settingsDraft();
+ if((cfg.operation==="mul"||cfg.operation==="div")&&!next.customNumbers&&!next.tables.length){
+  notify("Selecione pelo menos uma tabuada.");return;
+ }
+ const isSame=(x,y)=>JSON.stringify({...x,showTimer:false,autofocus:false})===JSON.stringify({...y,showTimer:false,autofocus:false});
+ const changed=!isSame(cfg,next);
+ if(changed&&cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Essas alterações iniciam um novo ciclo. Continuar?"))return;
+ const previous=cfg;cfg=next;
+ if(changed&&!startCycle()){cfg=previous;createSettings();return}
+ persist();closeModal("settingsModal");renderWorkspace();
 }
 function review(){
 const source=history.find(x=>x.operation===cfg.operation&&Array.isArray(x.hard)&&x.hard.length);
@@ -455,6 +503,12 @@ $("skipAnswer").addEventListener("click",()=>answer(true));
 $("newCycle").addEventListener("click",()=>{startCycle();renderWorkspace()});
 $("btnReview").addEventListener("click",review);
 $("saveSettings").addEventListener("click",applySettings);
+$("settingsModal").addEventListener("change",event=>{
+ if(event.target.matches('input,select'))updateComboPreview();
+});
+$("settingsModal").addEventListener("input",event=>{
+ if(event.target.matches('input[type="number"]'))updateComboPreview();
+});
 $("allTables").addEventListener("click",()=>document.querySelectorAll('input[data-group="t"]').forEach(x=>x.checked=true));
 $("noTables").addEventListener("click",()=>document.querySelectorAll('input[data-group="t"]').forEach(x=>x.checked=false));
 $("restoreSettings").addEventListener("click",()=>{const selected=cfg.operation;const backup=cfg;cfg=normalize({...defaultCfg,operation:selected});createSettings();cfg=backup});
