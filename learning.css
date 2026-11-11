@@ -285,3 +285,10 @@
   .mobile-keypad{gap:5px}
   .mobile-keypad button{min-height:43px}
 }
+
+/* Ações auxiliares do teclado, sem perder o botão de pular */
+.mobile-input-tools{display:flex;align-items:center;gap:6px}
+.mobile-input-tools button{font-size:11px;min-height:30px}
+.mobile-input-tools #mobileSkip{border:1px solid var(--line);background:var(--panel);padding:5px 10px;border-radius:9px;color:var(--muted)}
+.mobile-input-tools #mobileSkip:hover{border-color:var(--accent);color:var(--text)}
+@media(max-width:370px){.mobile-input-tools{gap:3px}.mobile-input-tools button{padding:4px 6px!important}}
