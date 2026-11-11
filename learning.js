@@ -168,6 +168,17 @@ function arithmeticCount(c){
  for(const x of a)for(const y of b)if(supportsValue(c,x/(c.decimalOperands?10**c.decimalPlaces:1),y/(c.decimalOperands?10**c.decimalPlaces:1)))count++;
  return count;
 }
+function subtractionSkill(a,b){
+ if(a<0||b<0)return "Regra de sinais";
+ if(!Number.isInteger(a)||!Number.isInteger(b))return "Subtração com decimais";
+ if(b>=10&&a>b&&a-b<=12&&a>=20)return "Completar pela soma";
+ const remainder=((b%10)+10)%10;
+ if(a>=20&&b>=10&&(remainder===8||remainder===9))return "Compensação";
+ if(a>=20&&b>=10&&remainder!==0&&(remainder===1||remainder===2||remainder===3||remainder===7))return "Diferença constante";
+ if(a>=10&&b>0&&a%10<b%10)return "Passagem pela dezena";
+ if(a>=20&&b>=10)return "Subtrair por partes";
+ return "Fundamentos";
+}
 function arithmeticProblems(c,push){
  const scale=c.decimalOperands?10**c.decimalPlaces:1;
  const left=operandValues(c.aMin,c.aMax,c),right=operandValues(c.bMin,c.bMax,c);
@@ -176,7 +187,7 @@ function arithmeticProblems(c,push){
  const eligible=[];
  if(totalSize>120000&&!c.allCombos){
   const seen=new Set();let tries=0;
-  while(eligible.length<c.count&&tries<Math.max(5000,c.count*500)){
+  while(eligible.length<Math.min(500,c.count*10)&&tries<Math.max(5000,c.count*500)){
    tries++;
    const i=rand(0,left.length-1),j=rand(0,right.length-1),key=i+":"+j;
    if(seen.has(key))continue;seen.add(key);
@@ -194,29 +205,50 @@ function arithmeticProblems(c,push){
  if(!c.allCombos){
   if(c.operation==="sub"&&c.method==="equal"){
    const favored=eligible.filter(([a,b])=>a>10&&b>10&&Number.isInteger(a)&&Number.isInteger(b)&&Math.abs(b%10)>=2&&Math.abs(b%10)<=9);
-   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+   if(favored.length){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
   if(c.operation==="sub"&&c.method==="countup"){
    const favored=eligible.filter(([a,b])=>a>b&&a-b<=15&&a>=20);
-   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+   if(favored.length){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
   if(c.operation==="sub"&&c.method==="split"){
    const favored=eligible.filter(([a,b])=>a>20&&b>10&&Math.abs(b%10)>=1);
-   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+   if(favored.length){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
   if(c.method==="comp"){
-   const favored=eligible.filter(([a,b])=>Math.min(Math.abs(b)%10,10-(Math.abs(b)%10))<=2);
-   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+   const favored=eligible.filter(([a,b])=>Math.min(Math.abs(b)%10,10-(Math.abs(b)%10))<=2&&Math.abs(b)%10!==0);
+   if(favored.length){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
   if(c.operation==="sub"&&c.method==="bridge"){
    const favored=eligible.filter(([a,b])=>a>=10&&b>0&&Math.floor(a/10)!==Math.floor((a-b)/10));
-   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+   if(favored.length){eligible.length=0;for(const pair of favored)eligible.push(pair)}
   }
  }
  const wanted=c.allCombos?eligible.length:Math.min(c.count,eligible.length);
  let pairs;
- if(c.allCombos||c.mode==="sequential")pairs=eligible.slice(0,wanted);
- else{
+ if(c.operation==="sub"&&c.method==="auto"&&!c.allCombos){
+  const groups=new Map(),order=["Fundamentos","Passagem pela dezena","Subtrair por partes","Completar pela soma","Diferença constante","Compensação","Regra de sinais","Subtração com decimais"];
+  for(const pair of eligible){
+   const skill=subtractionSkill(pair[0],pair[1]);
+   if(!groups.has(skill))groups.set(skill,[]);
+   groups.get(skill).push(pair);
+  }
+  for(const list of groups.values()){
+   for(let i=0;i<list.length;i++){const j=rand(i,list.length-1);[list[i],list[j]]=[list[j],list[i]]}
+  }
+  pairs=[];let rounds=0;
+  while(pairs.length<wanted&&rounds<wanted+1){
+   let advanced=false;
+   for(const skill of order){
+    const group=groups.get(skill);
+    if(group?.length){pairs.push(group.pop());advanced=true;if(pairs.length>=wanted)break}
+   }
+   if(!advanced)break;
+   rounds++;
+  }
+ }
+ if(!pairs&&(c.allCombos||c.mode==="sequential"))pairs=eligible.slice(0,wanted);
+ else if(!pairs){
   // Sorteio sem reposição, usando algoritmo parcial de Fisher-Yates.
   for(let i=0;i<wanted;i++){
    const j=rand(i,eligible.length-1);
@@ -229,7 +261,8 @@ function arithmeticProblems(c,push){
   const raw=c.operation==="add"?a+b:c.operation==="sub"?a-b:c.operation==="mul"?a*b:a/b;
   const ans=Number(raw.toFixed(10));
   const fmt=x=>formatNumber(x);
-  push(fmt(a)+symbol+(b<0?"("+fmt(b)+")":fmt(b))+" = ?",ans,c.operation+":"+a+":"+b);
+  push(fmt(a)+symbol+(b<0?"("+fmt(b)+")":fmt(b))+" = ?",ans,c.operation+":"+a+":"+b,
+c.operation==="sub"?(c.method==="auto"?subtractionSkill(a,b):(M.sub.find(x=>x.id===c.method)?.name||"Subtração")):null);
  }
 }
 const old=read(LEGACY);let cfg=normalize(read(STORE)?.cfg||(old?{...defaultCfg,tables:old.tables,exclude:old.excludeFactors,min:old.minMul,max:old.maxMul,format:old.mode==="conventional"?"all":"minimal",showTimer:old.timer}:defaultCfg));
@@ -281,7 +314,9 @@ const gcd=(a,b)=>b?gcd(b,a%b):a;
 const fractional=(a,b)=>{const g=gcd(Math.abs(a),Math.abs(b));return (a/g)+"/"+(b/g)};
 function generate(c){
 const out=[],seen=new Set(),L=c.level,method=c.method;
-const push=(prompt,answer,id)=>{if(!seen.has(id||prompt)){seen.add(id||prompt);out.push(p(prompt,answer,id))}};
+const push=(prompt,answer,id,skill)=>{if(!seen.has(id||prompt)){
+ seen.add(id||prompt);const item=p(prompt,answer,id);if(skill)item.skill=skill;out.push(item)
+}};
 if(arithmetic(c.operation)&&(c.operation==="add"||c.operation==="sub"||c.customNumbers)){arithmeticProblems(c,push);return out;}
 if(window.MentalExtra.methods[c.operation]){window.MentalExtra.create(c,push);return out;}
 if(c.operation==="mul"||c.operation==="div"){
@@ -512,6 +547,8 @@ if(current&&!locked&&cycle.items.includes(current)&&!current.done){
 if(!current)return finish();
 cycle.last=current.id;locked=false;started=performance.now();
 $("problem").textContent=current.prompt;
+$("questionSkill").hidden=!current.skill;
+$("questionSkill").textContent=current.skill||"";
 $("strategyHintText").hidden=true;
 $("btnStrategyHint").setAttribute("aria-expanded","false");
 $("strategyHintText").textContent=strategyForQuestion(current);
