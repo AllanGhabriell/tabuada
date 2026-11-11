@@ -54,3 +54,7 @@
 #comboPreview[data-warning="true"]{color:var(--bad)}
 #operandConfig .field-row{margin-bottom:4px}
 @media(max-width:650px){.workspace-panel>summary{padding:11px 13px}.workspace-panel .workspace-top,.workspace-panel .progress-card{padding:12px 13px}}
+
+.range-presets{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}
+.range-presets button{padding:6px 11px;font-size:12px;border-radius:9px}
+@media(max-width:650px){.range-presets button{flex:1}}
