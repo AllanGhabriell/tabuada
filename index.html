@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090e1b">
 <meta name="description" content="Treinamento de cálculo mental com métodos orientativos e prática personalizada.">
-<title>Cálculo Mental — Treinamento</title>
+<title>Gauss Lab — Laboratório de Matemática</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="shortcut icon" href="./favicon.svg">
+<meta name="apple-mobile-web-app-title" content="Gauss Lab">
 <link rel="stylesheet" href="./learning.css">
 <script src="./modules-extra.js" defer></script>
 <script src="./learning.js" defer></script>
@@ -14,12 +17,12 @@
 <div class="ambient-glow" id="ambientGlow" aria-hidden="true"></div>
 <div class="app-shell">
 <header class="topbar">
-<div class="brand"><div class="brand-icon" aria-hidden="true">∑</div><div><strong>Cálculo Mental</strong><small id="brandSubtitle">Treine seu raciocínio matemático</small></div></div>
+<div class="brand"><div class="brand-icon" aria-hidden="true">G</div><div><strong>Gauss Lab</strong><small id="brandSubtitle">Treine seu raciocínio matemático</small></div></div>
 <div class="top-actions">
 <button id="btnBack" hidden type="button">← Início</button>
 <button id="btnSettings" hidden type="button">⚙ Configurar</button>
 <button id="btnReset" hidden type="button">↻ Recomeçar</button>
-<button id="historyButton" type="button">Histórico</button>
+<button id="historyButton" type="button">Histórico</button><button id="helpShortcuts" type="button" aria-label="Atalhos do teclado" title="Atalhos do teclado">⌨</button>
 <button id="themeButton" class="icon-button" type="button" aria-label="Alternar tema">☀</button>
 </div>
 </header>
@@ -35,9 +38,19 @@
 <div id="problem" aria-live="polite">7 × 8 = ?</div>
 <form id="answerForm" class="answer-form" autocomplete="off">
 <label for="answer" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Resposta</label>
-<input id="answer" name="answer" type="text" inputmode="decimal" autocomplete="off" placeholder="Sua resposta" aria-label="Resposta">
+<input id="answer" name="answer" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Sua resposta" aria-label="Resposta">
 <div class="answer-actions"><button id="submitAnswer" class="primary" type="submit">Responder</button><button id="skipAnswer" type="button">Pular</button></div>
 </form>
+<div id="mobileInputArea" class="mobile-input-area" hidden>
+<div class="mobile-input-top"><span>Resposta rápida</span><button type="button" id="mobileKeyboardToggle" aria-pressed="false">⌨ Teclado</button></div>
+<div class="mobile-keypad" id="mobileKeypad" role="group" aria-label="Teclado numérico do treino">
+<button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" data-key="erase" aria-label="Apagar último">⌫</button>
+<button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="minus">−</button>
+<button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="decimal">,</button>
+<button type="button" data-key="0">0</button><button type="button" data-key="slash">/</button><button type="button" data-key="clear">Limpar</button><button type="button" class="key-confirm" data-key="enter">✓</button>
+</div>
+<div class="mobile-prime-keys" id="mobilePrimeKeys" hidden><button type="button" data-key="yes">Sim</button><button type="button" data-key="no">Não</button></div>
+</div>
 <div id="feedback" role="status" aria-live="polite">Digite sua resposta e pressione Enter.</div>
 <div class="question-hint"><button id="btnStrategyHint" type="button" aria-expanded="false">✦ Dica para esta conta</button><p id="strategyHintText" hidden></p></div>
 </div>
@@ -149,6 +162,10 @@
 <div class="modal-footer"><button id="restoreSettings" type="button">Restaurar padrões</button><button id="saveSettings" class="primary" type="button">Aplicar</button></div>
 </div>
 </div>
+<div class="modal-overlay" id="shortcutModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="shortcutTitle">
+<div class="modal-head"><h2 id="shortcutTitle">Atalhos do Gauss Lab</h2><button type="button" data-dismiss="shortcutModal" aria-label="Fechar">×</button></div>
+<div class="modal-body"><div class="shortcut-grid"><span><kbd>S</kbd> Sair do treino</span><span><kbd>Enter</kbd> Responder</span><span><kbd>P</kbd> Pular</span><span><kbd>D</kbd> Mostrar dica</span><span><kbd>C</kbd> Configurar</span><span><kbd>M</kbd> Métodos</span><span><kbd>G</kbd> Progresso</span><span><kbd>F</kbd> Focar resposta</span><span><kbd>Esc</kbd> Fechar janela</span><span><kbd>?</kbd> Atalhos</span></div><p class="guide-note">Atalhos não interferem ao digitar respostas de texto ou nas janelas.</p></div>
+<div class="modal-footer"><button type="button" class="primary" data-dismiss="shortcutModal">Fechar</button></div></div></div>
 <div class="modal-overlay" id="historyModal" hidden>
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
 <div class="modal-head"><h2 id="historyTitle">Histórico de ciclos</h2><button type="button" data-dismiss="historyModal" aria-label="Fechar">×</button></div>
