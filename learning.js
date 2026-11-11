@@ -36,7 +36,11 @@ add:[
 {id:"comp",name:"Compensação",guide:["Aproxime um dos valores de uma dezena.","47 + 38: faça 47 + 40 = 87.","Devolva os 2 acrescentados: 85."]}
 ],
 sub:[
+{id:"auto",name:"Automática",guide:["Antes de resolver, olhe os números e escolha um atalho.","Números próximos: conte a diferença. Perto de uma dezena: arredonde.","Você pode usar qualquer estratégia; a dica por questão mostra uma possibilidade."]},
 {id:"free",name:"Livre",guide:["Encontre a diferença da forma que preferir.","83 − 47 = 36.","Teste atalhos com dezenas próximas."]},
+{id:"equal",name:"Diferença constante",guide:["Se você subtrair o mesmo valor dos dois números, a diferença permanece.","33 − 23: retire 3 de ambos. Vira 30 − 20.","30 − 20 = 10. Também é válido somar 7 aos dois: 40 − 30 = 10."]},
+{id:"split",name:"Subtrair por partes",guide:["Divida o segundo número em partes mais simples.","83 − 27: retire 20 e obtenha 63.","Depois retire 7: o resultado é 56."]},
+{id:"countup",name:"Completar pela soma",guide:["Se os números forem próximos, descubra quanto falta do menor ao maior.","62 − 57: de 57 a 60 faltam 3; de 60 a 62 faltam 2.","A diferença é 3 + 2 = 5."]},
 {id:"comp",name:"Compensação",guide:["Arredonde o valor que será subtraído.","83 − 47: faça 83 − 50 = 33.","Some os 3 retirados a mais: 36."]},
 {id:"bridge",name:"Completar a diferença",guide:["Pense quanto falta para chegar ao número maior.","De 47 até 50 faltam 3; até 80 mais 30; até 83 mais 3.","Some: 3 + 30 + 3 = 36."]}
 ],
@@ -85,7 +89,7 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"intermediate",difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
 function normalize(c){
 const previous=c&&typeof c==="object"?c:{};
 const legacyDifficulty=!Object.prototype.hasOwnProperty.call(previous,"difficultyPreset");
@@ -94,9 +98,29 @@ if(legacyDifficulty&&["add","sub","mul","div"].includes(c.operation)){
  const profile=Number(c.level)>=3?"hard":Number(c.level)===2?"balanced":"balanced";
  Object.assign(c,profile==="hard"?{difficultyPreset:"hard",excludeEqual:true,excludeZero:true,excludeOne:true,excludeSmallResults:true}:{difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false});
 }if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;
+c.quickPreset=["easy","intermediate","hard","expert","custom"].includes(c.quickPreset)?c.quickPreset:"intermediate";
 c.difficultyPreset=["basic","balanced","hard","custom"].includes(c.difficultyPreset)?c.difficultyPreset:"balanced";
 for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])c[key]=!!c[key];
 c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
+const PRESET_NAMES={easy:"Fácil",intermediate:"Intermediário",hard:"Difícil",expert:"Superdifícil",custom:"Personalizado"};
+function presetConfig(id,operation,base){
+ const c={...clone(base),quickPreset:id};
+ const map={
+  easy:{aMax:10,bMax:10,count:20,decimalOperands:false,decimalResults:false,negativeOperands:false,negativeResults:false,excludeEqual:false,excludeZero:false,excludeOne:false,excludeSmallResults:false,difficultyPreset:"basic"},
+  intermediate:{aMax:30,bMax:30,count:28,decimalOperands:false,decimalResults:false,negativeOperands:false,negativeResults:false,excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false,difficultyPreset:"balanced"},
+  hard:{aMax:100,bMax:100,count:30,decimalOperands:true,decimalPlaces:1,decimalResults:operation==="div",negativeOperands:false,negativeResults:true,excludeEqual:true,excludeZero:true,excludeOne:true,excludeSmallResults:true,difficultyPreset:"hard"},
+  expert:{aMax:300,bMax:300,count:36,decimalOperands:true,decimalPlaces:2,decimalResults:operation==="div",negativeOperands:true,negativeResults:true,excludeEqual:true,excludeZero:true,excludeOne:true,excludeSmallResults:true,difficultyPreset:"hard"}
+ };
+ Object.assign(c,map[id]||{});
+ c.aMin=0;c.bMin=0;c.allCombos=false;
+ if(operation==="mul"||operation==="div"){c.customNumbers=true}
+ if(operation==="sub"||operation==="add"){
+   c.method=id==="easy"?"free":id==="intermediate"?"auto":"auto";
+   if(operation==="add")c.method="free";
+ }
+ if(!["add","sub","mul","div"].includes(operation)){c.level=id==="easy"?1:id==="intermediate"?2:3;c.count=id==="expert"?36:id==="hard"?30:24}
+ return normalize(c);
+}
 const FIRST_OPERATIONS=["add","sub","mul","div"];
 const arithmetic=(op)=>FIRST_OPERATIONS.includes(op);
 const safeRange=(a,b)=>[Math.min(a,b),Math.max(a,b)];
@@ -158,6 +182,18 @@ function arithmeticProblems(c,push){
  if(!eligible.length)return;
  if(c.allCombos&&eligible.length>10000)throw Error("Esta seleção gera "+eligible.length.toLocaleString("pt-BR")+" operações. Limite de 10.000 por ciclo; reduza o intervalo.");
  if(!c.allCombos){
+  if(c.operation==="sub"&&c.method==="equal"){
+   const favored=eligible.filter(([a,b])=>a>10&&b>10&&Number.isInteger(a)&&Number.isInteger(b)&&Math.abs(b%10)>=2&&Math.abs(b%10)<=9);
+   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+  }
+  if(c.operation==="sub"&&c.method==="countup"){
+   const favored=eligible.filter(([a,b])=>a>b&&a-b<=15&&a>=20);
+   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+  }
+  if(c.operation==="sub"&&c.method==="split"){
+   const favored=eligible.filter(([a,b])=>a>20&&b>10&&Math.abs(b%10)>=1);
+   if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
+  }
   if(c.method==="comp"){
    const favored=eligible.filter(([a,b])=>Math.min(Math.abs(b)%10,10-(Math.abs(b)%10))<=2);
    if(favored.length>=c.count){eligible.length=0;for(const pair of favored)eligible.push(pair)}
@@ -196,6 +232,21 @@ let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",l
 const single=m=>["random","sequential","fluency"].includes(m);
 const op=()=>operations.find(x=>x.id===cfg.operation);
 const method=()=>M[cfg.operation].find(x=>x.id===cfg.method);
+function renderMethodCards(){
+ const root=$("methodCards");root.replaceChildren();
+ const methods=M[cfg.operation];
+ for(const m of methods){
+  const button=document.createElement("button");button.type="button";
+  button.className="method-card";button.dataset.active=String(cfg.method===m.id);
+  button.setAttribute("aria-pressed",String(cfg.method===m.id));
+  const title=document.createElement("strong");title.textContent=m.name;
+  const subtitle=document.createElement("small");subtitle.textContent=m.guide[0];
+  button.append(title,subtitle);
+  button.addEventListener("click",()=>changeMethod(m.id));
+  root.append(button);
+ }
+ $("selectedMethodName").textContent=method().name;
+}
 const p=(prompt,answer,id)=>({id:id||prompt,prompt,answer,weight:1,streak:0,attempts:0,wrong:0,correct:0,done:false,time:0});
 const formatNumber=x=>new Intl.NumberFormat("pt-BR",{useGrouping:false,maximumFractionDigits:12}).format(x);
 const isPrime=n=>{if(n<2)return false;for(let k=2;k*k<=n;k++)if(n%k===0)return false;return true};
@@ -323,6 +374,7 @@ function renderWorkspace(){
 if(!cycle||cycle.cfg.operation!==cfg.operation){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 options($("modeSelect"),modes,cfg.mode);
 options($("methodSelect"),M[cfg.operation],cfg.method);
+renderMethodCards();
 $("moduleTitle").textContent=op().name;$("questionOperation").textContent=op().name.toUpperCase()+" · RESOLVA MENTALMENTE";$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
 $("methodHelp").disabled=false;
 $("btnReview").hidden=history.length===0;
@@ -433,6 +485,9 @@ cfg.method=id;if(!startCycle()){createSettings();openModal("settingsModal");retu
 let tutorialIndex=0,tutorialSteps=[],tutorialPractice=null;
 function tutorialExample(){
  if(cfg.operation==="sub"){
+  if(cfg.method==="equal")return {prompt:"43 − 23 = ?",answer:20};
+  if(cfg.method==="split")return {prompt:"73 − 21 = ?",answer:52};
+  if(cfg.method==="countup")return {prompt:"72 − 67 = ?",answer:5};
   if(cfg.method==="bridge")return {prompt:"14 − 8 = ?",answer:6};
   if(cfg.method==="comp")return {prompt:"72 − 38 = ?",answer:34};
   return {prompt:"13 − 5 = ?",answer:8};
