@@ -338,6 +338,18 @@ const id=c.operation==="mul"&&c.format==="minimal"?[Math.min(a,b),Math.max(a,b)]
 if(c.operation==="mul")push(a+" × "+b+" = ?",a*b,id);
 else push((a*b)+" ÷ "+a+" = ?",b,id);
 }
+if(!c.allCombos&&out.length>c.count){
+ if(c.mode==="sequential"||c.mode==="learning"){
+  const spaced=[];
+  for(let i=0;i<c.count;i++)spaced.push(out[Math.floor((i+.5)*out.length/c.count)]);
+  return spaced;
+ }
+ for(let i=0;i<c.count;i++){
+  const j=rand(i,out.length-1);
+  [out[i],out[j]]=[out[j],out[i]];
+ }
+ return out.slice(0,c.count);
+}
 return out;
 }
 if(c.operation==="prime"){
@@ -778,7 +790,7 @@ function renderPresetSelection(){
 }
 function fillPresetForm(c){
  for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=c[k];
- for(const [id,key] of [["allCombos","allCombos"],["negativeResults","negativeResults"],["negativeOperands","negativeOperands"],["decimalOperands","decimalOperands"],["decimalResults","decimalResults"],["customNumbers","customNumbers"]])$(id).checked=!!c[key];
+ for(const [id,key] of [["tableAllCombos","allCombos"],["allCombos","allCombos"],["negativeResults","negativeResults"],["negativeOperands","negativeOperands"],["decimalOperands","decimalOperands"],["decimalResults","decimalResults"],["customNumbers","customNumbers"]])$(id).checked=!!c[key];
  for(const k of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])$(k).checked=!!c[k];
  $("decimalPlaces").value=String(c.decimalPlaces);
  $("countSetting").value=c.count;
@@ -803,7 +815,7 @@ $("customNumbers").checked=cfg.customNumbers;
 $("operandConfig").hidden=!personalized;
 $("numberConfig").hidden=!arithmetic(cfg.operation)||(multi&&!cfg.customNumbers);
 $("tableConfig").hidden=!multi||cfg.customNumbers;
-$("countConfig").hidden=multi&&!cfg.customNumbers;
+$("countConfig").hidden=false;
 $("comboConfig").hidden=cfg.operation!=="mul";
 $("levelConfig").hidden=arithmetic(cfg.operation);
 $("rootConfig").hidden=cfg.operation!=="root";
@@ -814,6 +826,7 @@ $("formatSetting").value=cfg.format;$("rootSetting").value=cfg.rootType;$("prime
 $("timerSetting").checked=cfg.showTimer;$("focusSetting").checked=cfg.autofocus;
 for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=cfg[k];
 $("allCombos").checked=cfg.allCombos;
+$("tableAllCombos").checked=cfg.allCombos;
 $("negativeResults").checked=cfg.negativeResults;
 $("negativeOperands").checked=cfg.negativeOperands;
 $("decimalOperands").checked=cfg.decimalOperands;
@@ -840,7 +853,7 @@ function settingsDraft(){
  customNumbers:$("customNumbers").checked,
  aMin:$("operandAMin").value,aMax:$("operandAMax").value,
  bMin:$("operandBMin").value,bMax:$("operandBMax").value,
- allCombos:$("allCombos").checked,
+ allCombos:(cfg.operation==="mul"||cfg.operation==="div")&&!$("customNumbers").checked?$("tableAllCombos").checked:$("allCombos").checked,
  negativeResults:$("negativeResults").checked,
  negativeOperands:$("negativeOperands").checked,
  decimalOperands:$("decimalOperands").checked,
@@ -864,7 +877,7 @@ function updateComboPreview(){
  if(cfg.operation==="mul"||cfg.operation==="div"){
   $("operandConfig").hidden=!c.customNumbers;
   $("tableConfig").hidden=c.customNumbers;
-  $("countConfig").hidden=!c.customNumbers;
+  $("countConfig").hidden=false;
   $("numberConfig").hidden=!c.customNumbers;
   $("comboConfig").hidden=c.customNumbers||cfg.operation!=="mul";
  }
