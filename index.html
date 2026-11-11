@@ -726,8 +726,9 @@
         return {text:"A resposta era "+(item.a*item.b)+". Vamos praticar novamente.",kind:"bad"};
       }
       state.correct++;item.good++;
-      const sessionAvg=state.correct+state.wrong>1?state.totalMs/(state.correct+state.wrong):4000;
-      const ownAvg=item.solved>1?item.totalMs/item.solved:sessionAvg;
+      const priorAnswers=state.correct+state.wrong-1;
+      const sessionAvg=priorAnswers>=4?(state.totalMs-ms)/priorAnswers:4000;
+      const ownAvg=item.solved>2?(item.totalMs-ms)/(item.solved-1):sessionAvg;
       const fastLimit=clamp(Math.round(ownAvg*.6),1800,3200);
       const slowLimit=clamp(Math.round(ownAvg*1.65),5000,8500);
       const fast=ms<=fastLimit,slow=ms>=slowLimit;
