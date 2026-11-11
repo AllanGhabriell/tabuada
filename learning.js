@@ -85,8 +85,11 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false};
-function normalize(c){c={...clone(defaultCfg),...(c&&typeof c==="object"?c:{})};if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
+const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+function normalize(c){c={...clone(defaultCfg),...(c&&typeof c==="object"?c:{})};if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";for(const key of ["aMin","aMax","bMin","bMax"])c[key]=limit(Number.isFinite(Number(c[key]))?Math.trunc(Number(c[key])):0,0,1000);c.allCombos=!!c.allCombos;c.negativeResults=!!c.negativeResults;c.negativeOperands=!!c.negativeOperands;c.decimalOperands=!!c.decimalOperands;c.decimalResults=!!c.decimalResults;c.customNumbers=!!c.customNumbers;
+c.difficultyPreset=["basic","balanced","hard","custom"].includes(c.difficultyPreset)?c.difficultyPreset:"balanced";
+for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])c[key]=!!c[key];
+c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;return c}
 const FIRST_OPERATIONS=["add","sub","mul","div"];
 const arithmetic=(op)=>FIRST_OPERATIONS.includes(op);
 const safeRange=(a,b)=>[Math.min(a,b),Math.max(a,b)];
@@ -98,9 +101,20 @@ function operandValues(lo,hi,c){
  const negatives=positive.filter(n=>n!==0).map(n=>-n).reverse();
  return negatives.concat(positive);
 }
+function arithmeticAnswer(c,a,b){
+ return c.operation==="add"?a+b:c.operation==="sub"?a-b:c.operation==="mul"?a*b:a/b;
+}
+function allowedByDifficulty(c,a,b,result){
+ if(c.excludeEqual&&Math.abs(a-b)<1e-9)return false;
+ if(c.excludeZero&&(Math.abs(a)<1e-9||Math.abs(b)<1e-9))return false;
+ if(c.excludeOne&&(Math.abs(Math.abs(a)-1)<1e-9||Math.abs(Math.abs(b)-1)<1e-9))return false;
+ if(c.excludeSmallResults&&Math.abs(result)<=2+1e-9)return false;
+ return true;
+}
 function supportsValue(c,a,b){
  if(c.operation==="div"&&b===0)return false;
- const value=c.operation==="add"?a+b:c.operation==="sub"?a-b:c.operation==="mul"?a*b:a/b;
+ const value=arithmeticAnswer(c,a,b);
+ if(!allowedByDifficulty(c,a,b,value))return false;
  if(!c.negativeResults&&value<0)return false;
  if(c.operation==="div"&&!c.decimalResults&&!Number.isInteger(value))return false;
  if(c.operation==="div"&&c.decimalResults&&Math.abs(value-Number(value.toFixed(c.decimalPlaces)))>1e-9)return false;
@@ -190,6 +204,10 @@ const low=Math.min(c.min,c.max),high=Math.max(c.min,c.max);
 for(const a of c.tables)for(let b=low;b<=high;b++){
 if(c.exclude.includes(a)||c.exclude.includes(b))continue;
 if(c.operation==="div"&&a*b===0)continue;
+ const factorA=c.operation==="mul"?a:a*b;
+ const factorB=c.operation==="mul"?b:a;
+ const answer=c.operation==="mul"?a*b:b;
+ if(!allowedByDifficulty(c,factorA,factorB,answer))continue;
 if(c.operation==="mul"&&method==="double"&&![2,4,8].includes(b)&&![2,4,8].includes(a))continue;
 if(c.operation==="mul"&&method==="comp"&&![8,9,11,12].includes(b)&&![8,9,11,12].includes(a))continue;
 const id=c.operation==="mul"&&c.format==="minimal"?[Math.min(a,b),Math.max(a,b)].join("x"):a+"-"+b;
@@ -453,6 +471,9 @@ function notify(msg){$("toast").textContent=msg;$("toast").hidden=false;clearTim
 function createSettings(){
 const multi=cfg.operation==="mul"||cfg.operation==="div";
 const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
+$("difficultyFilters").hidden=!arithmetic(cfg.operation);
+$("difficultyPreset").value=cfg.difficultyPreset;
+for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])$(key).checked=cfg[key];
 $("customRangeConfig").hidden=!multi;
 $("customNumbers").checked=cfg.customNumbers;
 $("operandConfig").hidden=!personalized;
@@ -500,7 +521,10 @@ function settingsDraft(){
  negativeOperands:$("negativeOperands").checked,
  decimalOperands:$("decimalOperands").checked,
  decimalResults:$("decimalResults").checked,
- decimalPlaces:$("decimalPlaces").value});
+ decimalPlaces:$("decimalPlaces").value,
+ difficultyPreset:$("difficultyPreset").value,
+ excludeEqual:$("excludeEqual").checked,excludeZero:$("excludeZero").checked,
+ excludeOne:$("excludeOne").checked,excludeSmallResults:$("excludeSmallResults").checked});
 }
 function updateComboPreview(){
  const c=settingsDraft();
@@ -584,6 +608,23 @@ document.querySelectorAll("[data-range]").forEach(button=>button.addEventListene
  for(const id of ["operandAMax","operandBMax"])$(id).value=String(max);
  updateComboPreview();
 }));
+const difficultyPresets={
+ basic:{excludeEqual:false,excludeZero:false,excludeOne:false,excludeSmallResults:false},
+ balanced:{excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false},
+ hard:{excludeEqual:true,excludeZero:true,excludeOne:true,excludeSmallResults:true}
+};
+$("difficultyPreset").addEventListener("change",e=>{
+ const flags=difficultyPresets[e.target.value];
+ if(flags)for(const [k,v] of Object.entries(flags))$(k).checked=v;
+ updateComboPreview();
+});
+for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"]){
+ $(key).addEventListener("change",()=>{
+  const matching=Object.entries(difficultyPresets).find(([name,flags])=>Object.entries(flags).every(([k,v])=>$(k).checked===v));
+  $("difficultyPreset").value=matching?.[0]||"custom";
+  updateComboPreview();
+ });
+}
 $("settingsModal").addEventListener("change",event=>{
  if(event.target.matches('input,select'))updateComboPreview();
 });
