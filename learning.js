@@ -635,6 +635,10 @@ function finish(){
    level:cfg.quickPreset,ended:new Date().toISOString(),count:status.total,
    mastered:status.mastered,pending:status.unresolved,firstPassCorrect:cycle.firstPassCorrect||0,
    hints:cycle.hints||0,correct:cycle.correct,wrong:cycle.wrong,skips:cycle.skips,
+   skills:Object.entries(cycle.items.reduce((acc,item)=>{
+    const skill=item.skill||"Geral";const v=acc[skill]||(acc[skill]={total:0,mastered:0});
+    v.total++;if(item.mastered)v.mastered++;return acc
+   },{})).map(([skill,result])=>({skill,...result})),
    answered:cycle.answered,
    avg:cycle.correct+cycle.wrong?cycle.totalMs/(cycle.correct+cycle.wrong):0,
    hard:cycle.items.filter(x=>!x.mastered||x.wrong||x.attempts>2).map(x=>({
@@ -658,6 +662,33 @@ function renderFinished(){
  $("summaryOutcome").textContent=status.mastered+" dominadas · "+status.unresolved+
  " para revisar em outra sessão. Precisão inicial: "+$("endAccuracy").textContent+".";
  $("reviewCompleted").disabled=status.unresolved===0;
+ const trend=$("summaryTrend"),prior=history.slice(1).find(h=>
+  h.operation===cfg.operation&&h.level===cfg.quickPreset&&h.method===cfg.method&&h.count>0&&
+  h.firstPassCorrect!==undefined);
+ if(prior){
+  const now=status.total?Math.round((cycle.firstPassCorrect||0)*100/status.total):0;
+  const previous=Math.round(prior.firstPassCorrect*100/prior.count);
+  const delta=now-previous;
+  trend.textContent=delta>0?"↑ "+delta+" pontos percentuais de precisão inicial desde o ciclo anterior":
+    delta<0?"↓ "+Math.abs(delta)+" pontos percentuais em relação ao ciclo anterior":
+    "Mesma precisão inicial do ciclo anterior.";
+ }else trend.textContent="Primeiro ciclo comparável registrado nesta configuração.";
+ const skillRoot=$("summarySkills");skillRoot.replaceChildren();
+ const groups=new Map();
+ for(const item of cycle.items){
+  const name=item.skill||"Geral",row=groups.get(name)||{mastered:0,total:0};
+  row.total++;if(item.mastered)row.mastered++;groups.set(name,row);
+ }
+ skillRoot.hidden=groups.size<2;
+ if(!skillRoot.hidden){
+  const head=document.createElement("strong");head.textContent="Domínio por habilidade";skillRoot.append(head);
+  for(const [name,counts] of groups){
+   const row=document.createElement("div");row.className="summary-skill-row";
+   const label=document.createElement("span");label.textContent=name;
+   const count=document.createElement("b");count.textContent=counts.mastered+"/"+counts.total;
+   row.append(label,count);skillRoot.append(row);
+  }
+ }
  renderProgress();
 }
 function startPendingReview(items){
