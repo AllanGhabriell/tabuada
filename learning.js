@@ -320,7 +320,7 @@ if(cycle?.cfg?.operation==="mul"){
   const m=String(item.prompt||"").match(/^([2-9]) × ([2-9]) = \?$/);
   return m&&cfg.operation==="mul"&&cfg.tables.includes(Number(m[1]))&&Number(item.answer)===Number(m[1])*Number(m[2]);
  });
- if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==window.GaussEssentials.make("mul",cfg.essentialStage).length))cycle=null;
+ if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==(cfg.essentialStage==="custom"?cfg.tables.length*8:window.GaussEssentials.make("mul",cfg.essentialStage).length)))cycle=null;
 }
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
 const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
