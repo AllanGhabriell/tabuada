@@ -92,7 +92,7 @@ const single=m=>["random","sequential","fluency"].includes(m);
 const op=()=>operations.find(x=>x.id===cfg.operation);
 const method=()=>M[cfg.operation].find(x=>x.id===cfg.method);
 const p=(prompt,answer,id)=>({id:id||prompt,prompt,answer,weight:1,streak:0,attempts:0,wrong:0,correct:0,done:false,time:0});
-const formatNumber=x=>Number.isInteger(x)?String(x):String(Number(x.toFixed(3))).replace(".",",");
+const formatNumber=x=>new Intl.NumberFormat("pt-BR",{useGrouping:false,maximumFractionDigits:12}).format(x);
 const isPrime=n=>{if(n<2)return false;for(let k=2;k*k<=n;k++)if(n%k===0)return false;return true};
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 const fractional=(a,b)=>{const g=gcd(Math.abs(a),Math.abs(b));return (a/g)+"/"+(b/g)};
@@ -125,7 +125,7 @@ for(let a=2;a<=[12,18,25][L-1];a++)for(let exp=2;exp<=(method==="square"?2:L===3
 return out.slice(0,c.count);
 }
 if(c.operation==="root"){
-if(c.rootType==="exact"||method==="square"){
+if(method==="square"||(c.rootType==="exact"&&!["estimate","heron"].includes(method))){
 for(let a=2;a<=[18,30,45][L-1];a++)push("√"+a*a+" = ?",a);
 }else{
 for(let n=10;n<=[70,150,280][L-1];n++){if(Number.isInteger(Math.sqrt(n)))continue;push("√"+n+" ≈ ? (1 decimal)",Math.round(Math.sqrt(n)*10)/10)}
@@ -138,7 +138,7 @@ return out;
 }
 if(c.operation==="round"){
 const places=L===1?[10,100]:L===2?[10,100,1000]:[1,10,100,1000];
-for(let i=0;i<c.count;i++){const place=places[i%places.length],n=rand(1,Math.round(2000*L));const target=place===1?Math.round(n*10)/10:n;const step=place===1?.1:place;const val=place===1?Number((target+.04).toFixed(2)):target;push(formatNumber(val)+" → "+(place===1?"1 casa decimal":place===10?"dezena":place===100?"centena":"milhar")+" mais próxima?",place===1?Number(val.toFixed(1)):Math.round(val/step)*step,"round-"+i)}
+for(let i=0;i<c.count;i++){const place=places[i%places.length],n=rand(1,Math.round(2000*L));const target=place===1?Math.round(n*10)/10:n;const step=place===1?.1:place;const val=place===1?Number((target+[.04,.05,.06,-.04,-.05][i%5]).toFixed(2)):target;push(formatNumber(val)+" → "+(place===1?"1 casa decimal":place===10?"dezena":place===100?"centena":"milhar")+" mais próxima?",place===1?Number(val.toFixed(1)):Math.round(val/step)*step,"round-"+i)}
 return out;
 }
 if(c.operation==="fraction"){
