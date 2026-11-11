@@ -423,6 +423,9 @@ mobileInputMode();
 window.scrollTo(0,0);
 }
 function renderHome(){
+$("homeCycleCount").textContent=history.length.toLocaleString("pt-BR");
+$("homeQuestionCount").textContent=history.reduce((sum,h)=>sum+(Number(h.answered)||0),0).toLocaleString("pt-BR");
+$("homeModuleCount").textContent=new Set(history.map(h=>h.operation)).size.toLocaleString("pt-BR");
 const groups=[...new Set(operations.map(x=>x.group))],container=$("moduleGroups");
 container.replaceChildren();
 for(const group of groups){
