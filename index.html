@@ -43,6 +43,7 @@
 <div class="question-head"><span id="questionOperation">MULTIPLICAÇÃO · RESOLVA MENTALMENTE</span><span id="timeDisplay" hidden>0.0s</span></div>
 <div id="questionSkill" class="question-skill" hidden></div>
 <div id="problem" aria-live="polite">7 × 8 = ?</div>
+<div id="assistCue" class="assist-cue" hidden aria-live="off"></div>
 <form id="answerForm" class="answer-form" autocomplete="off">
 <label for="answer" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Resposta</label>
 <input id="answer" name="answer" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Sua resposta" aria-label="Resposta">
@@ -59,7 +60,7 @@
 <div class="mobile-prime-keys" id="mobilePrimeKeys" hidden><button type="button" data-key="yes">Sim</button><button type="button" data-key="no">Não</button></div>
 </div>
 <div id="feedback" role="status" aria-live="polite">Digite sua resposta e pressione Enter.</div>
-<div class="question-hint"><button id="btnStrategyHint" type="button" aria-expanded="false">✦ Dica para esta conta</button><p id="strategyHintText" hidden></p></div>
+<div class="question-hint"><button id="btnStrategyHint" type="button" aria-expanded="false">✦ Ver estratégia</button><p id="strategyHintText" hidden></p></div>
 </div>
 <details id="multiplicationPicker" class="multiplication-picker" hidden>
 <summary><span>Tabuadas: <strong id="mulSelectedLabel">2 e 5</strong></span><span class="mul-picker-right"><small id="mulTotalLabel">16 contas</small><span aria-hidden="true">⌄</span></span></summary>
@@ -83,7 +84,7 @@
 <div><b id="endAccuracy">0%</b><small>Precisão inicial</small></div>
 <div><b id="endAvg">—</b><small>Tempo médio</small></div>
 </div>
-<p id="summaryTrend" class="summary-trend"></p>
+<p id="summaryTrend" class="summary-trend"></p><p id="summaryAssistance" class="summary-assistance"></p>
 <div id="summarySkills" class="summary-skills" hidden></div>
 <div class="summary-actions"><button id="summaryNextStage" type="button" class="primary" hidden>Próxima habilidade</button><button id="newCycle" class="primary" type="button">Repetir ciclo</button><button id="reviewCompleted" type="button">Revisar pendentes</button><button id="summaryAnother" type="button">Outro módulo</button><button id="summaryHome" type="button">Tela inicial</button></div>
 </div>
@@ -105,6 +106,7 @@
 <div class="progress-foot"><span id="progressDescription">Questões concluídas</span><span id="progressRemaining">0 restantes</span></div>
 <div class="stats-line"><span>Dominadas <strong id="progressMastered">0</strong></span><span>Pendentes <strong id="progressPending">0</strong></span></div><div class="stats-line"><span>Acertos <strong id="statCorrect">0</strong></span><span>Erros <strong id="statWrong">0</strong></span><span>Tentativas <strong id="statAttempts">0</strong></span></div>
 </div></details>
+<details id="assistAnalysisPanel" class="workspace-panel"><summary><span>◷ Como estou aprendendo</span><span class="panel-chevron">⌄</span></summary><div class="assist-analysis"><div class="assist-metrics"><div><b id="assistIndependent">0</b><small>Acertos sem ajuda</small></div><div><b id="assistWithHelp">0</b><small>Acertos com ajuda</small></div><div><b id="assistSlowCount">0</b><small>Demorei a responder</small></div><div><b id="assistAvgTime">—</b><small>Tempo médio</small></div></div><p id="assistAnalysisText">Os indicadores aparecem durante seu treino.</p><p class="assist-analysis-note">O destaque visual é uma sugestão, não uma regra obrigatória. A estratégia pode mudar conforme os números.</p></div></details>
 <div class="below-training"><button id="btnReview" type="button">↻ Revisar dificuldades</button></div>
 </section>
 </main>
@@ -123,6 +125,7 @@
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
 <div class="modal-head"><h2 id="settingsTitle">Configurações</h2><button type="button" data-dismiss="settingsModal" aria-label="Fechar">×</button></div>
 <div class="modal-body">
+<section id="assistanceConfig" class="settings-block assistance-config" hidden><h3>Assistência visual no treino</h3><p>Treine normalmente. A orientação só aparece se você pedir ou quando demorar.</p><label class="field">Quando oferecer ajuda<select id="assistMode"><option value="auto">Automática após um tempo</option><option value="manual">Somente quando eu pedir</option><option value="off">Desativada</option></select></label><label class="field" id="assistDelayRow">Segundos até o destaque<input id="assistDelay" type="number" min="5" max="60" step="5" value="15"></label><label class="checkbox-row"><input id="assistColor" type="checkbox" checked> Destacar discretamente o fator mais útil</label><p class="settings-hint">A explicação completa só abre quando você toca em “Ver estratégia”. Essas preferências não reiniciam o ciclo.</p></section>
 <section id="quickConfiguration" class="quick-configuration">
 <div class="quick-heading"><strong>Escolha sua dificuldade</strong><small>Um clique configura o treino.</small></div>
 <div class="preset-grid" id="quickPresets" role="group" aria-label="Nível de treino">
