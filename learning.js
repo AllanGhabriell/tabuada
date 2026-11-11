@@ -850,17 +850,29 @@ renderPresetSelection();
 $("advancedSettings").hidden=!advancedOpen;
 $("toggleAdvanced").setAttribute("aria-expanded",String(advancedOpen));
 const multi=cfg.operation==="mul"||cfg.operation==="div";
+const mul=cfg.operation==="mul";
+$("quickConfiguration").hidden=mul;
+$("advancedSettings").hidden=mul?false:!advancedOpen;
+$("difficultyFilters").hidden=mul||!arithmetic(cfg.operation);
+$("customRangeConfig").hidden=mul||!multi;
+$("numberConfig").hidden=mul;
+$("factorExclusions").hidden=mul;
+$("factorRange").hidden=mul;
+$("countConfig").hidden=mul;
+$("comboConfig").hidden=mul;
+$("tablesHeading").textContent=mul?"Escolha as tabuadas de 1 a 10":"Tabuadas ou divisores";
+$("tablesDescription").textContent=mul?"Cada tabuada selecionada inclui as 10 multiplicações, de ×1 até ×10.":"Selecione os números que deseja trabalhar.";
 const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
-$("difficultyFilters").hidden=!arithmetic(cfg.operation);
+$("difficultyFilters").hidden=!arithmetic(cfg.operation)||mul;
 $("difficultyPreset").value=cfg.difficultyPreset;
 for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])$(key).checked=cfg[key];
-$("customRangeConfig").hidden=!multi;
+$("customRangeConfig").hidden=!multi||mul;
 $("customNumbers").checked=cfg.customNumbers;
 $("operandConfig").hidden=!personalized;
-$("numberConfig").hidden=!arithmetic(cfg.operation)||(multi&&!cfg.customNumbers);
+$("numberConfig").hidden=mul||!arithmetic(cfg.operation)||(multi&&!cfg.customNumbers);
 $("tableConfig").hidden=!multi||cfg.customNumbers;
-$("countConfig").hidden=false;
-$("comboConfig").hidden=cfg.operation!=="mul";
+$("countConfig").hidden=mul;
+$("comboConfig").hidden=true;
 $("levelConfig").hidden=arithmetic(cfg.operation);
 $("rootConfig").hidden=cfg.operation!=="root";
 $("primeConfig").hidden=cfg.operation!=="prime";
@@ -870,7 +882,6 @@ $("formatSetting").value=cfg.format;$("rootSetting").value=cfg.rootType;$("prime
 $("timerSetting").checked=cfg.showTimer;$("focusSetting").checked=cfg.autofocus;
 for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=cfg[k];
 $("allCombos").checked=cfg.allCombos;
-$("tableAllCombos").checked=cfg.allCombos;
 $("negativeResults").checked=cfg.negativeResults;
 $("negativeOperands").checked=cfg.negativeOperands;
 $("decimalOperands").checked=cfg.decimalOperands;
@@ -878,7 +889,7 @@ $("decimalResults").checked=cfg.decimalResults;
 $("decimalPlaces").value=String(cfg.decimalPlaces);
 $("decimalResults").parentElement.hidden=cfg.operation!=="div";
 const grid=$("tablesSetting"),excluded=$("excludeSetting");grid.replaceChildren();excluded.replaceChildren();
-for(let n=0;n<=12;n++){
+for(let n=mul?1:0;n<=(mul?10:12);n++){
 for(const [host,values,type] of [[grid,cfg.tables,"t"],[excluded,cfg.exclude,"e"]]){
 const label=document.createElement("label");label.className="number-option";
 const input=document.createElement("input");input.type="checkbox";input.value=String(n);input.dataset.group=type;input.checked=values.includes(n);
@@ -897,7 +908,8 @@ function settingsDraft(){
  customNumbers:$("customNumbers").checked,
  aMin:$("operandAMin").value,aMax:$("operandAMax").value,
  bMin:$("operandBMin").value,bMax:$("operandBMax").value,
- allCombos:(cfg.operation==="mul"||cfg.operation==="div")&&!$("customNumbers").checked?$("tableAllCombos").checked:$("allCombos").checked,
+ allCombos:cfg.operation==="mul"?true:
+ (cfg.operation==="div"&&!$("customNumbers").checked?cfg.allCombos:$("allCombos").checked),
  negativeResults:$("negativeResults").checked,
  negativeOperands:$("negativeOperands").checked,
  decimalOperands:$("decimalOperands").checked,
@@ -912,18 +924,18 @@ function settingsDraft(){
 function updateComboPreview(){
  const c=settingsDraft();
  const preview=$("comboPreview");
- const len=arithmeticCount(c);
+ const len=c.operation==="mul"?c.tables.length*10:arithmeticCount(c);
  preview.textContent=len<0?
  "Intervalo amplo · "+(c.allCombos?"reduza o intervalo para treinar todas":"até "+c.count+" questões sorteadas"):
  len.toLocaleString("pt-BR")+" combinações disponíveis"+
  (c.allCombos?" · ciclo completo":(" · até "+Math.min(c.count,len)+" por ciclo"));
  preview.dataset.warning=c.allCombos&&(len<0||len>10000)?"true":"false";
  if(cfg.operation==="mul"||cfg.operation==="div"){
-  $("operandConfig").hidden=!c.customNumbers;
-  $("tableConfig").hidden=c.customNumbers;
-  $("countConfig").hidden=false;
-  $("numberConfig").hidden=!c.customNumbers;
-  $("comboConfig").hidden=c.customNumbers||cfg.operation!=="mul";
+  $("operandConfig").hidden=cfg.operation==="mul"||!c.customNumbers;
+  $("tableConfig").hidden=cfg.operation==="mul"?false:c.customNumbers;
+  $("countConfig").hidden=cfg.operation==="mul";
+  $("numberConfig").hidden=cfg.operation==="mul"||!c.customNumbers;
+  $("comboConfig").hidden=true;
  }
  $("decimalPlaces").disabled=!c.decimalOperands&&!c.decimalResults;
 }
