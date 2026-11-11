@@ -160,3 +160,9 @@
  .question-skill{font-size:10px}
  .summary-actions{grid-template-columns:1fr 1fr}
 }
+
+.summary-trend{font-size:12px;color:var(--muted);margin:12px 0 6px;text-align:center}
+.summary-skills{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:13px 16px;margin:12px auto;max-width:470px;text-align:left}
+.summary-skills>strong{font-size:12px;color:var(--text);display:block;margin-bottom:10px}
+.summary-skill-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:7px 0;border-top:1px solid var(--line)}
+.summary-skill-row span{color:var(--muted)}.summary-skill-row b{font-variant-numeric:tabular-nums;color:var(--text)}
