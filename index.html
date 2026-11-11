@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#111a2c">
 <link rel="stylesheet" href="./learning.css">
 <script src="./modules-extra.js" defer></script>
+<script src="./essentials.js" defer></script>
 <script src="./learning.js" defer></script>
 </head>
 <body>
@@ -61,14 +62,18 @@
 <div class="question-hint"><button id="btnStrategyHint" type="button" aria-expanded="false">✦ Dica para esta conta</button><p id="strategyHintText" hidden></p></div>
 </div>
 <details id="multiplicationPicker" class="multiplication-picker" hidden>
-<summary><span>Tabuadas: <strong id="mulSelectedLabel">1 a 10</strong></span><span class="mul-picker-right"><small id="mulTotalLabel">100 contas</small><span aria-hidden="true">⌄</span></span></summary>
+<summary><span>Tabuadas: <strong id="mulSelectedLabel">2 e 5</strong></span><span class="mul-picker-right"><small id="mulTotalLabel">16 contas</small><span aria-hidden="true">⌄</span></span></summary>
 <div class="mul-picker-body">
-<p>Escolha as tabuadas que deseja aprender. Cada uma inclui multiplicações de 1 a 10.</p>
+<p>Marque suas tabuadas de 2 a 9. Contas com 0, 1 e 10 não aparecem; essas propriedades são explicadas nas estratégias.</p>
 <div class="mul-picker-toolbar"><button id="mulPickAll" type="button">Selecionar todas</button><button id="mulPickNone" type="button">Limpar seleção</button></div>
 <div class="mul-picker-grid" id="mulPickerGrid" role="group" aria-label="Selecionar tabuadas de 1 a 10"></div>
-<div class="mul-picker-footer"><span id="mulSelectionCount">100 contas neste ciclo</span><button id="mulApply" type="button" class="primary">Iniciar treino</button></div>
+<div class="mul-picker-footer"><span id="mulSelectionCount">16 contas no treino inicial</span><button id="mulApply" type="button" class="primary">Iniciar treino</button></div>
 </div>
 </details>
+<section id="essentialPanel" class="essential-panel" hidden aria-label="Treinos essenciais">
+<div class="essential-head"><div><strong>Treinos essenciais</strong><p id="essentialIntro">Aprenda uma habilidade de cada vez.</p></div><span id="essentialCurrent" class="essential-current">Iniciante</span></div>
+<div id="essentialCards" class="essential-cards" role="group" aria-label="Etapas essenciais"></div>
+</section>
 <div id="summaryArea" class="summary-card" hidden>
 <span class="eyebrow">TREINAMENTO FINALIZADO</span><h2 id="summaryTitle">Ciclo concluído</h2><p>Você chegou ao final das questões deste ciclo.</p>
 <div id="summaryOutcome" class="summary-outcome">Treino encerrado. Revise seus resultados.</div>
