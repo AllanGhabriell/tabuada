@@ -485,6 +485,7 @@ cfg.method=id;if(!startCycle()){createSettings();openModal("settingsModal");retu
 let tutorialIndex=0,tutorialSteps=[],tutorialPractice=null;
 function tutorialExample(){
  if(cfg.operation==="sub"){
+  if(cfg.method==="auto")return {prompt:"72 − 68 = ?",answer:4};
   if(cfg.method==="equal")return {prompt:"43 − 23 = ?",answer:20};
   if(cfg.method==="split")return {prompt:"73 − 21 = ?",answer:52};
   if(cfg.method==="countup")return {prompt:"72 − 67 = ?",answer:5};
@@ -530,7 +531,30 @@ function displayGuide(){
 function openModal(id){$(id).hidden=false}
 function closeModal(id){$(id).hidden=true}
 function notify(msg){$("toast").textContent=msg;$("toast").hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$("toast").hidden=true,3500)}
+let draftPreset="intermediate";
+let advancedOpen=false;
+function renderPresetSelection(){
+ for(const button of document.querySelectorAll("[data-preset]")){
+  button.dataset.active=String(button.dataset.preset===draftPreset);
+  button.setAttribute("aria-pressed",String(button.dataset.preset===draftPreset));
+ }
+ $("presetCurrent").textContent=draftPreset==="custom"?"Treino personalizado":PRESET_NAMES[draftPreset]+" · configuração pronta";
+}
+function fillPresetForm(c){
+ for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=c[k];
+ for(const [id,key] of [["allCombos","allCombos"],["negativeResults","negativeResults"],["negativeOperands","negativeOperands"],["decimalOperands","decimalOperands"],["decimalResults","decimalResults"],["customNumbers","customNumbers"]])$(id).checked=!!c[key];
+ for(const k of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])$(k).checked=!!c[k];
+ $("decimalPlaces").value=String(c.decimalPlaces);
+ $("countSetting").value=c.count;
+ $("levelSetting").value=c.level;
+ $("difficultyPreset").value=c.difficultyPreset;
+ updateComboPreview();
+}
 function createSettings(){
+draftPreset=cfg.quickPreset||"intermediate";
+renderPresetSelection();
+$("advancedSettings").hidden=!advancedOpen;
+$("toggleAdvanced").setAttribute("aria-expanded",String(advancedOpen));
 const multi=cfg.operation==="mul"||cfg.operation==="div";
 const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
 $("difficultyFilters").hidden=!arithmetic(cfg.operation);
@@ -584,6 +608,7 @@ function settingsDraft(){
  decimalOperands:$("decimalOperands").checked,
  decimalResults:$("decimalResults").checked,
  decimalPlaces:$("decimalPlaces").value,
+ quickPreset:draftPreset,
  difficultyPreset:$("difficultyPreset").value,
  excludeEqual:$("excludeEqual").checked,excludeZero:$("excludeZero").checked,
  excludeOne:$("excludeOne").checked,excludeSmallResults:$("excludeSmallResults").checked});
@@ -664,6 +689,26 @@ $("skipAnswer").addEventListener("click",()=>answer(true));
 $("newCycle").addEventListener("click",()=>{startCycle();renderWorkspace()});
 $("btnReview").addEventListener("click",review);
 $("saveSettings").addEventListener("click",applySettings);
+$("toggleAdvanced").addEventListener("click",()=>{
+ advancedOpen=!advancedOpen;
+ $("advancedSettings").hidden=!advancedOpen;
+ $("toggleAdvanced").setAttribute("aria-expanded",String(advancedOpen));
+});
+for(const button of document.querySelectorAll("[data-preset]")){
+ button.addEventListener("click",()=>{
+  const next=presetConfig(button.dataset.preset,cfg.operation,cfg);
+  draftPreset=button.dataset.preset;
+  fillPresetForm(next);renderPresetSelection();
+  // A opção pronta pode ser iniciada imediatamente, sem passar pelos controles avançados.
+  applySettings();
+ });
+}
+$("advancedSettings").addEventListener("input",event=>{
+ if(event.target.matches("input,select")){draftPreset="custom";renderPresetSelection()}
+});
+$("advancedSettings").addEventListener("change",event=>{
+ if(event.target.matches("input,select")){draftPreset="custom";renderPresetSelection()}
+});
 document.querySelectorAll("[data-range]").forEach(button=>button.addEventListener("click",()=>{
  const max=Number(button.dataset.range);
  for(const id of ["operandAMin","operandBMin"])$(id).value="0";
