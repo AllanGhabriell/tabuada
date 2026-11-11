@@ -39,6 +39,7 @@
 <div class="answer-actions"><button id="submitAnswer" class="primary" type="submit">Responder</button><button id="skipAnswer" type="button">Pular</button></div>
 </form>
 <div id="feedback" role="status" aria-live="polite">Digite sua resposta e pressione Enter.</div>
+<div class="question-hint"><button id="btnStrategyHint" type="button" aria-expanded="false">✦ Dica para esta conta</button><p id="strategyHintText" hidden></p></div>
 </div>
 <div id="summaryArea" class="summary-card" hidden>
 <span class="eyebrow">TREINAMENTO FINALIZADO</span><h2 id="summaryTitle">Ciclo concluído</h2><p>Você chegou ao final das questões deste ciclo.</p>
@@ -55,9 +56,11 @@
 <span class="eyebrow">ÁREA DE TREINAMENTO</span><h1 id="moduleTitle">Multiplicação</h1>
 <div class="choice-grid">
 <label>Modo de treino<select id="modeSelect"></select></label>
-<label>Metodologia<select id="methodSelect"></select></label>
+<label class="method-select-fallback">Metodologia<select id="methodSelect"></select></label>
 </div>
-<div class="method-explain"><p id="methodNote">Resolva pelo seu próprio caminho.</p><button id="methodHelp" type="button">◫ Tutorial</button></div>
+<div class="method-library"><div class="method-library-head"><strong>Estratégias de resolução</strong><small id="selectedMethodName">Livre</small></div>
+<div id="methodCards" class="method-cards" role="group" aria-label="Estratégias disponíveis"></div></div>
+<div class="method-explain"><p id="methodNote">Resolva pelo seu próprio caminho.</p><button id="methodHelp" type="button">◫ Aprender a técnica</button></div>
 </div></details>
 <details id="workspaceProgress" class="workspace-panel"><summary><span>◫ Progresso do ciclo</span><span class="panel-summary-right"><strong id="compactProgress">0%</strong><span class="panel-chevron">⌄</span></span></summary>
 <div class="progress-card">
@@ -84,6 +87,18 @@
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
 <div class="modal-head"><h2 id="settingsTitle">Configurações</h2><button type="button" data-dismiss="settingsModal" aria-label="Fechar">×</button></div>
 <div class="modal-body">
+<section id="quickConfiguration" class="quick-configuration">
+<div class="quick-heading"><strong>Escolha sua dificuldade</strong><small>Um clique configura o treino.</small></div>
+<div class="preset-grid" id="quickPresets" role="group" aria-label="Nível de treino">
+<button type="button" data-preset="easy"><b>Fácil</b><small>Fundamentos</small></button>
+<button type="button" data-preset="intermediate"><b>Intermediário</b><small>Consolidação</small></button>
+<button type="button" data-preset="hard"><b>Difícil</b><small>Novas variações</small></button>
+<button type="button" data-preset="expert"><b>Superdifícil</b><small>Alta exigência</small></button>
+</div>
+<p class="preset-current" id="presetCurrent">Intermediário</p>
+<button id="toggleAdvanced" class="advanced-toggle" type="button" aria-expanded="false" aria-controls="advancedSettings">⚙ Personalizar treino <span>⌄</span></button>
+</section>
+<div id="advancedSettings" hidden>
 <div id="customRangeConfig" class="settings-block" hidden><label class="checkbox-row"><input type="checkbox" id="customNumbers"> Usar intervalos personalizados em vez das tabuadas</label></div>
 <div id="operandConfig" class="settings-block" hidden>
 <h3>Intervalo dos números</h3><p>Defina os valores de cada posição da conta.</p><div class="range-presets"><button type="button" data-range="10">0 a 10</button><button type="button" data-range="20">0 a 20</button><button type="button" data-range="100">0 a 100</button></div>
@@ -129,6 +144,7 @@
 <div id="rootConfig" class="settings-block"><label class="field">Tipo de raiz<select id="rootSetting"><option value="exact">Raízes exatas</option><option value="estimate">Aproximação (1 decimal)</option></select></label></div>
 <div id="primeConfig" class="settings-block"><label class="field">Tipo de exercício<select id="primeSetting"><option value="check">É primo? Sim ou não</option><option value="list">Próximo primo</option></select></label></div>
 <div class="settings-block"><label class="checkbox-row"><input type="checkbox" id="timerSetting"> Mostrar cronômetro</label><label class="checkbox-row"><input type="checkbox" id="focusSetting"> Foco automático no campo</label></div>
+</div>
 </div>
 <div class="modal-footer"><button id="restoreSettings" type="button">Restaurar padrões</button><button id="saveSettings" class="primary" type="button">Aplicar</button></div>
 </div>
