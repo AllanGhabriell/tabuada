@@ -106,3 +106,36 @@
 .question-hint button:hover{background:var(--accentsoft);border-color:var(--line)}
 #strategyHintText{padding:12px;border-radius:12px;background:var(--accentsoft);border:1px solid var(--line);text-align:left;font-size:12px;line-height:1.55;margin:5px 0 0}
 @media(max-width:560px){.method-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.method-card{min-height:64px;padding:10px}.preset-grid button{min-height:69px;padding:12px}}
+
+/* Gauss Lab — entrada rápida em telas sensíveis ao toque */
+.mobile-input-area{width:min(450px,100%);padding:0 2px}
+.mobile-input-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 7px}
+.mobile-input-top span{font-size:11px;font-weight:750;letter-spacing:.3px;color:var(--muted)}
+.mobile-input-top button{border:0;background:transparent;color:var(--accent);font-size:11px;padding:4px 7px}
+.mobile-keypad{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.mobile-keypad button{min-height:46px;background:var(--panel);border:1px solid var(--line);border-radius:12px;font-size:20px;font-weight:700;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+.mobile-keypad button[data-key="erase"],.mobile-keypad button[data-key="clear"],.mobile-keypad button[data-key="minus"],.mobile-keypad button[data-key="slash"]{font-size:15px}
+.mobile-keypad button.key-confirm{background:var(--accent);color:white;border-color:var(--accent)}
+.mobile-keypad button:active{transform:scale(.96);background:var(--accentsoft)}
+.mobile-keypad button.key-confirm:active{background:#7065ce}
+.mobile-prime-keys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mobile-prime-keys button{min-height:56px;font-size:17px;background:var(--accentsoft);border:1px solid var(--accent);touch-action:manipulation}
+.shortcut-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.shortcut-grid span{display:flex;align-items:center;gap:9px;font-size:12px;min-height:37px;color:var(--text)}
+.shortcut-grid kbd{display:inline-grid;place-items:center;min-width:35px;padding:7px;border-radius:8px;background:var(--panel);border:1px solid var(--line);font:700 12px system-ui}
+@media(min-width:651px){.mobile-input-area{display:none!important}}
+@media(max-width:650px){
+ #workspace>.question-card{gap:10px;padding:15px 13px;min-height:0}
+ #workspace>.question-card #problem{margin:2px 0 5px}
+ .answer-form .answer-actions{display:none}
+ .answer-form input{font-size:23px!important;padding:10px!important}
+ .mobile-input-area:not([hidden]){display:block}
+ #feedback{min-height:35px;padding:7px 10px}
+ .question-hint button{padding:4px 8px}
+ .shortcut-grid{grid-template-columns:1fr 1fr}
+ .top-actions button#helpShortcuts{display:none}
+}
+@media(max-width:650px) and (pointer:fine){
+ .answer-form .answer-actions{display:flex}
+}
+@media(prefers-reduced-motion:reduce){.mobile-keypad button{transition:none}}
