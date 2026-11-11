@@ -35,6 +35,9 @@
 </section>
 <section id="workspace" class="page" hidden>
 <div id="trainingArea" class="question-card">
+<div class="cycle-mini" aria-label="Andamento do treino"><span id="cycleStage">QUESTÕES NOVAS</span><strong id="cycleMiniCount">0/0</strong></div>
+<div class="cycle-track" aria-hidden="true"><div id="cycleMiniFill"></div></div>
+<div class="cycle-mini-stats"><span><b id="miniMastered">0</b> dominadas</span><span><b id="miniNew">0</b> novas</span><span><b id="miniReview">0</b> revisar</span></div>
 <div class="question-head"><span id="questionOperation">MULTIPLICAÇÃO · RESOLVA MENTALMENTE</span><span id="timeDisplay" hidden>0.0s</span></div>
 <div id="problem" aria-live="polite">7 × 8 = ?</div>
 <form id="answerForm" class="answer-form" autocomplete="off">
@@ -57,13 +60,14 @@
 </div>
 <div id="summaryArea" class="summary-card" hidden>
 <span class="eyebrow">TREINAMENTO FINALIZADO</span><h2 id="summaryTitle">Ciclo concluído</h2><p>Você chegou ao final das questões deste ciclo.</p>
+<div id="summaryOutcome" class="summary-outcome">Treino encerrado. Revise seus resultados.</div>
 <div class="result-grid">
 <div><b id="endCount">0</b><small>Questões</small></div>
 <div><b id="endCorrect">0</b><small>Acertos</small></div>
 <div><b id="endAccuracy">0%</b><small>Precisão</small></div>
 <div><b id="endAvg">—</b><small>Tempo médio</small></div>
 </div>
-<button id="newCycle" class="primary" type="button">Novo ciclo</button>
+<div class="summary-actions"><button id="newCycle" class="primary" type="button">Repetir ciclo</button><button id="reviewCompleted" type="button">Revisar pendentes</button><button id="summaryAnother" type="button">Outro módulo</button><button id="summaryHome" type="button">Tela inicial</button></div>
 </div>
 
 <details id="workspaceOptions" class="workspace-panel"><summary><span>✦ Modos e estratégias</span><span class="panel-summary-right"><small id="compactMethod">Livre</small><span class="panel-chevron">⌄</span></span></summary><div class="workspace-top">
@@ -81,7 +85,7 @@
 <div class="progress-top"><div><span class="eyebrow">PROGRESSO DO CICLO</span><br><b id="progressText">0 de 0</b></div><strong id="progressPercent">0%</strong></div>
 <div class="progress-track" id="progressTrack" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill"></div></div>
 <div class="progress-foot"><span id="progressDescription">Questões concluídas</span><span id="progressRemaining">0 restantes</span></div>
-<div class="stats-line"><span>Acertos <strong id="statCorrect">0</strong></span><span>Erros <strong id="statWrong">0</strong></span><span>Tentativas <strong id="statAttempts">0</strong></span></div>
+<div class="stats-line"><span>Dominadas <strong id="progressMastered">0</strong></span><span>Pendentes <strong id="progressPending">0</strong></span></div><div class="stats-line"><span>Acertos <strong id="statCorrect">0</strong></span><span>Erros <strong id="statWrong">0</strong></span><span>Tentativas <strong id="statAttempts">0</strong></span></div>
 </div></details>
 <div class="below-training"><button id="btnReview" type="button">↻ Revisar dificuldades</button></div>
 </section>
