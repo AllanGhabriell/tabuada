@@ -92,6 +92,24 @@
 <div class="settings-block" style="margin:16px 0 0"><label class="checkbox-row"><input id="allCombos" type="checkbox"> Todas as combinações possíveis</label>
 <p id="comboPreview">Selecione um intervalo para visualizar a quantidade de contas.</p></div>
 </div>
+<div id="difficultyFilters" class="settings-block" hidden>
+<h3>Dificuldade das contas</h3>
+<p>Evite operações óbvias sem perder a liberdade de treiná-las.</p>
+<label class="field">Perfil de questões
+<select id="difficultyPreset">
+<option value="basic">Completo · sem filtros</option>
+<option value="balanced">Equilibrado</option>
+<option value="hard">Desafiador</option>
+<option value="custom">Personalizado</option>
+</select></label>
+<div class="difficulty-flags">
+<label class="checkbox-row"><input type="checkbox" id="excludeEqual"> Ignorar números iguais <small>7 − 7, 8 × 8</small></label>
+<label class="checkbox-row"><input type="checkbox" id="excludeZero"> Ignorar contas com zero <small>8 − 0, 0 × 7</small></label>
+<label class="checkbox-row"><input type="checkbox" id="excludeOne"> Ignorar contas com um <small>9 × 1, 7 ÷ 1</small></label>
+<label class="checkbox-row"><input type="checkbox" id="excludeSmallResults"> Ignorar resultados muito simples <small>0, 1 ou 2 (em módulo)</small></label>
+</div>
+<p class="settings-hint">Os filtros são aplicados em todos os modos de treino. Alterá-los inicia outro ciclo.</p>
+</div>
 <div id="numberConfig" class="settings-block" hidden>
 <h3>Tipos de números</h3><p>Controle o que pode aparecer durante o treino.</p>
 <label class="checkbox-row"><input type="checkbox" id="negativeResults"> Permitir resultados negativos</label>
