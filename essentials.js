@@ -79,7 +79,7 @@ function make(op,id){
 function valid(op,item,selected){
  const text=String(item?.prompt||"");
  let m;
- if(op==="mul"){m=text.match(/^(\d+) × (\d+) = \?$/);return !!m&&+m[1]>=2&&+m[1]<=9&&+m[2]>=2&&+m[2]<=9&&(!selected||selected.includes(+m[1]))&&Number(item.answer)===+m[1]*+m[2]}
+ if(op==="mul"){m=text.match(/^(\d+) × (\d+) = \?$/);return !!m&&+m[1]>=2&&+m[1]<=9&&+m[2]>=2&&+m[2]<=9&&(!selected||selected.includes(+m[1])||selected.includes(+m[2]))&&Number(item.answer)===+m[1]*+m[2]}
  if(op==="div"){m=text.match(/^(\d+) ÷ (\d+) = \?$/);return !!m&&+m[2]>=2&&+m[2]<=9&&Number.isInteger(+m[1]/+m[2])&&+m[1]/+m[2]>=2&&+m[1]/+m[2]<=9&&(!selected||selected.includes(+m[2]))&&Number(item.answer)===+m[1]/+m[2]}
  if(op==="sub"){m=text.match(/^(-?[\d.,]+) − (?:\((-?[\d.,]+)\)|(-?[\d.,]+)) = \?$/);if(!m)return false;const a=Number(m[1].replace(",",".")),b=Number((m[2]||m[3]).replace(",","."));return a!==0&&b!==0&&a!==b}
  if(op==="add"){m=text.match(/^(-?[\d.,]+) \+ (?:\((-?[\d.,]+)\)|(-?[\d.,]+)) = \?$/);if(!m)return false;return Number(m[1].replace(",","."))!==0&&Number((m[2]||m[3]).replace(",","."))!==0}
