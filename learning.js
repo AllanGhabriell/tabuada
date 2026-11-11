@@ -124,6 +124,16 @@ function arithmeticProblems(c,push){
  }
  if(!eligible.length)return;
  if(c.allCombos&&eligible.length>10000)throw Error("Esta seleção gera "+eligible.length.toLocaleString("pt-BR")+" operações. Limite de 10.000 por ciclo; reduza o intervalo.");
+ if(!c.allCombos){
+  if(c.method==="comp"){
+   const favored=eligible.filter(([a,b])=>Math.min(Math.abs(b)%10,10-(Math.abs(b)%10))<=2);
+   if(favored.length>=c.count)eligible.splice(0,eligible.length,...favored);
+  }
+  if(c.operation==="sub"&&c.method==="bridge"){
+   const favored=eligible.filter(([a,b])=>a>=10&&b>0&&Math.floor(a/10)!==Math.floor((a-b)/10));
+   if(favored.length>=c.count)eligible.splice(0,eligible.length,...favored);
+  }
+ }
  const wanted=c.allCombos?eligible.length:Math.min(c.count,eligible.length);
  let pairs;
  if(c.allCombos||c.mode==="sequential")pairs=eligible.slice(0,wanted);
@@ -432,7 +442,7 @@ const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
 $("customRangeConfig").hidden=!multi;
 $("customNumbers").checked=cfg.customNumbers;
 $("operandConfig").hidden=!personalized;
-$("numberConfig").hidden=!arithmetic(cfg.operation);
+$("numberConfig").hidden=!arithmetic(cfg.operation)||(multi&&!cfg.customNumbers);
 $("tableConfig").hidden=!multi||cfg.customNumbers;
 $("countConfig").hidden=multi&&!cfg.customNumbers;
 $("comboConfig").hidden=cfg.operation!=="mul";
@@ -488,6 +498,8 @@ function updateComboPreview(){
   $("operandConfig").hidden=!c.customNumbers;
   $("tableConfig").hidden=c.customNumbers;
   $("countConfig").hidden=!c.customNumbers;
+  $("numberConfig").hidden=!c.customNumbers;
+  $("comboConfig").hidden=c.customNumbers||cfg.operation!=="mul";
  }
  $("decimalPlaces").disabled=!c.decimalOperands&&!c.decimalResults;
 }
