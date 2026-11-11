@@ -51,20 +51,21 @@
 <button id="newCycle" class="primary" type="button">Novo ciclo</button>
 </div>
 
-<div class="workspace-top">
+<details id="workspaceOptions" class="workspace-panel"><summary><span>⚙ Modo e metodologia</span><span class="panel-chevron">⌄</span></summary><div class="workspace-top">
 <span class="eyebrow">ÁREA DE TREINAMENTO</span><h1 id="moduleTitle">Multiplicação</h1>
 <div class="choice-grid">
 <label>Modo de treino<select id="modeSelect"></select></label>
 <label>Metodologia<select id="methodSelect"></select></label>
 </div>
 <div class="method-explain"><p id="methodNote">Resolva pelo seu próprio caminho.</p><button id="methodHelp" type="button">◫ Tutorial</button></div>
-</div>
+</div></details>
+<details id="workspaceProgress" class="workspace-panel"><summary><span>◫ Progresso do ciclo</span><span class="panel-chevron">⌄</span></summary>
 <div class="progress-card">
 <div class="progress-top"><div><span class="eyebrow">PROGRESSO DO CICLO</span><br><b id="progressText">0 de 0</b></div><strong id="progressPercent">0%</strong></div>
 <div class="progress-track" id="progressTrack" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill"></div></div>
 <div class="progress-foot"><span id="progressDescription">Questões concluídas</span><span id="progressRemaining">0 restantes</span></div>
 <div class="stats-line"><span>Acertos <strong id="statCorrect">0</strong></span><span>Erros <strong id="statWrong">0</strong></span><span>Tentativas <strong id="statAttempts">0</strong></span></div>
-</div>
+</div></details>
 <div class="below-training"><button id="btnReview" type="button">↻ Revisar dificuldades</button></div>
 </section>
 </main>
@@ -72,14 +73,31 @@
 <div class="modal-overlay" id="guideModal" hidden>
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
 <div class="modal-head"><h2 id="guideTitle">Tutorial</h2><button type="button" data-dismiss="guideModal" aria-label="Fechar">×</button></div>
-<div class="modal-body"><div id="guideSteps"></div><p class="guide-note" id="guideNote"></p></div>
-<div class="modal-footer"><button class="primary" type="button" data-dismiss="guideModal">Voltar ao treino</button></div>
+<div class="modal-body"><div class="guide-stepbar"><small id="guideStepCounter">Etapa 1</small><span id="guideStepPercent"></span></div>
+<div class="guide-meter"><span id="guideStepFill"></span></div><div id="guideSteps"></div>
+<div id="guidePractice" hidden><p id="guidePracticeQuestion"></p><label class="field">Sua resposta<input id="guidePracticeAnswer" type="text" inputmode="decimal" autocomplete="off"></label><p id="guidePracticeResult" role="status"></p><button type="button" id="guideCheck">Verificar resposta</button></div>
+<p class="guide-note" id="guideNote"></p></div>
+<div class="modal-footer"><button type="button" id="guidePrev">Anterior</button><button class="primary" type="button" id="guideNext">Próximo</button><button type="button" data-dismiss="guideModal">Fechar</button></div>
 </div>
 </div>
 <div class="modal-overlay" id="settingsModal" hidden>
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
 <div class="modal-head"><h2 id="settingsTitle">Configurações</h2><button type="button" data-dismiss="settingsModal" aria-label="Fechar">×</button></div>
 <div class="modal-body">
+<div id="operandConfig" class="settings-block" hidden>
+<h3>Intervalo dos números</h3><p>Defina os valores de cada posição da conta.</p>
+<div class="field-row"><label>Primeiro: de<input id="operandAMin" type="number" min="0" max="1000" step="1"></label><label>Até<input id="operandAMax" type="number" min="0" max="1000" step="1"></label></div>
+<div class="field-row" style="margin-top:10px"><label>Segundo: de<input id="operandBMin" type="number" min="0" max="1000" step="1"></label><label>Até<input id="operandBMax" type="number" min="0" max="1000" step="1"></label></div>
+<div class="settings-block" style="margin:16px 0 0"><label class="checkbox-row"><input id="allCombos" type="checkbox"> Todas as combinações possíveis</label>
+<p id="comboPreview">Selecione um intervalo para visualizar a quantidade de contas.</p></div>
+</div>
+<div id="numberConfig" class="settings-block" hidden>
+<h3>Tipos de números</h3><p>Controle o que pode aparecer durante o treino.</p>
+<label class="checkbox-row"><input type="checkbox" id="negativeResults"> Permitir resultados negativos</label>
+<label class="checkbox-row"><input type="checkbox" id="negativeOperands"> Permitir números negativos nas contas</label>
+<label class="checkbox-row"><input type="checkbox" id="decimalOperands"> Permitir números decimais</label>
+<label class="field" style="margin-top:7px">Casas decimais<select id="decimalPlaces"><option value="1">1 casa</option><option value="2">2 casas</option></select></label>
+</div>
 <div id="tableConfig">
 <div class="settings-block"><h3>Tabuadas ou divisores</h3><p>Selecione os números que deseja trabalhar.</p><div class="small-actions"><button id="allTables" type="button">Todas</button><button id="noTables" type="button">Limpar</button></div><div class="number-grid" id="tablesSetting"></div></div>
 <div class="settings-block"><h3>Fatores ignorados</h3><p>Operações que envolvem esses números serão excluídas.</p><div class="number-grid" id="excludeSetting"></div></div>
