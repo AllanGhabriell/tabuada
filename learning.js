@@ -112,14 +112,18 @@ function presetConfig(id,operation,base){
  const index={easy:0,intermediate:1,hard:2,expert:3}[id]??1;
  if(operation==="mul"){
   const numbers=[[2,3,4,5],[2,3,4,5,6,7,8,9,10],[2,3,4,5,6,7,8,9,10,11,12],[2,3,4,5,6,7,8,9,10,11,12]][index];
-  c.tables=numbers;c.min=index===3?2:1;c.max=index===3?15:10;c.exclude=index===0?[]:[1];c.customNumbers=false;
+  c.tables=index<=1?[1,...numbers]:numbers;c.min=index===3?2:1;c.max=index===3?15:10;
+  c.exclude=[];c.excludeOne=index>=1;c.customNumbers=false;
   c.format="minimal";c.count=[20,30,36,40][index];c.method=index===3?"split":"free";
  }else if(operation==="div"){
   c.tables=index===0?[2,3,4,5]:index===1?[2,3,4,5,6,7,8,9,10]:index===2?[2,3,4,5,6,7,8,9,10,11,12]:[2,3,4,5,6,7,8,9,10,11,12];
-  c.min=1;c.max=index===3?20:10;c.exclude=index===0?[]:[1];c.customNumbers=false;
+  c.min=1;c.max=index===3?20:10;c.exclude=[];
+  c.excludeEqual=index>=1;c.excludeOne=index>=1;c.customNumbers=false;
   c.count=[20,28,36,40][index];c.method="free";
  }else if(operation==="sub"||operation==="add"){
-  c.aMin=0;c.bMin=0;c.aMax=[10,100,300,500][index];c.bMax=[10,100,300,500][index];
+  c.aMin=0;c.bMin=0;
+  c.aMax=(operation==="sub"?[10,30,150,500]:[10,50,150,500])[index];
+  c.bMax=c.aMax;
   c.count=[20,28,30,36][index];
   c.negativeResults=index>=2;c.negativeOperands=index===3;
   c.decimalOperands=index>=2;c.decimalPlaces=index===3?2:1;
@@ -599,7 +603,11 @@ function answer(skip){
   kind="bad";message="Resposta: "+cleanAnswer(current.answer);
  }
  if(first){
-  if(correct){cycle.firstPassCorrect++;current.mastered=true;current.done=true}
+  if(correct){
+   cycle.firstPassCorrect++;
+   if(cfg.mode==="learning"){current.reviewStreak=1}
+   else{current.mastered=true;current.done=true}
+  }
   else if(single(cfg.mode)){current.done=true}
  }else{
   current.reviews++;
@@ -924,7 +932,15 @@ $("mobileKeyboardToggle").addEventListener("click",()=>{
 if(typeof mobileView.addEventListener==="function")mobileView.addEventListener("change",mobileInputMode);
 $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer(false)});
 $("skipAnswer").addEventListener("click",()=>answer(true));
-$("newCycle").addEventListener("click",()=>{if(startCycle())renderWorkspace()});
+$("newCycle").addEventListener("click",()=>{
+ const same=cycle.items.map(x=>({...p(x.prompt,x.answer,x.id),skill:x.skill}));
+ if(!same.length)return;
+ if(nextTimeout){clearTimeout(nextTimeout);nextTimeout=0}
+ cycle={id:Date.now(),cycleVersion:2,cfg:clone(cfg),items:same,answered:0,correct:0,wrong:0,skips:0,
+ totalMs:0,firstPassCorrect:0,hints:0,reviewLimit:single(cfg.mode)?0:2,
+ created:new Date().toISOString(),last:null,complete:false};
+ current=null;persist();renderWorkspace();
+});
 $("reviewCompleted").addEventListener("click",()=>startPendingReview(cycle.items.filter(x=>!x.mastered)));
 $("summaryHome").addEventListener("click",()=>showPage("home"));
 $("summaryAnother").addEventListener("click",()=>showPage("home"));
