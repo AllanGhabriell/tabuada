@@ -843,7 +843,7 @@ function renderPresetSelection(){
 }
 function fillPresetForm(c){
  for(const k of ["aMin","aMax","bMin","bMax"])$("operand"+k.charAt(0).toUpperCase()+k.slice(1)).value=c[k];
- for(const [id,key] of [["tableAllCombos","allCombos"],["allCombos","allCombos"],["negativeResults","negativeResults"],["negativeOperands","negativeOperands"],["decimalOperands","decimalOperands"],["decimalResults","decimalResults"],["customNumbers","customNumbers"]])$(id).checked=!!c[key];
+ for(const [id,key] of [["allCombos","allCombos"],["negativeResults","negativeResults"],["negativeOperands","negativeOperands"],["decimalOperands","decimalOperands"],["decimalResults","decimalResults"],["customNumbers","customNumbers"]])$(id).checked=!!c[key];
  for(const k of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])$(k).checked=!!c[k];
  $("decimalPlaces").value=String(c.decimalPlaces);
  $("countSetting").value=c.count;
