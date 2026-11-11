@@ -60,6 +60,15 @@
 <div id="feedback" role="status" aria-live="polite">Digite sua resposta e pressione Enter.</div>
 <div class="question-hint"><button id="btnStrategyHint" type="button" aria-expanded="false">✦ Dica para esta conta</button><p id="strategyHintText" hidden></p></div>
 </div>
+<details id="multiplicationPicker" class="multiplication-picker" hidden>
+<summary><span>Tabuadas: <strong id="mulSelectedLabel">1 a 10</strong></span><span class="mul-picker-right"><small id="mulTotalLabel">100 contas</small><span aria-hidden="true">⌄</span></span></summary>
+<div class="mul-picker-body">
+<p>Escolha as tabuadas que deseja aprender. Cada uma inclui multiplicações de 1 a 10.</p>
+<div class="mul-picker-toolbar"><button id="mulPickAll" type="button">Selecionar todas</button><button id="mulPickNone" type="button">Limpar seleção</button></div>
+<div class="mul-picker-grid" id="mulPickerGrid" role="group" aria-label="Selecionar tabuadas de 1 a 10"></div>
+<div class="mul-picker-footer"><span id="mulSelectionCount">100 contas neste ciclo</span><button id="mulApply" type="button" class="primary">Iniciar treino</button></div>
+</div>
+</details>
 <div id="summaryArea" class="summary-card" hidden>
 <span class="eyebrow">TREINAMENTO FINALIZADO</span><h2 id="summaryTitle">Ciclo concluído</h2><p>Você chegou ao final das questões deste ciclo.</p>
 <div id="summaryOutcome" class="summary-outcome">Treino encerrado. Revise seus resultados.</div>
@@ -156,10 +165,9 @@
 <label class="field" style="margin-top:7px">Casas decimais<select id="decimalPlaces"><option value="1">1 casa</option><option value="2">2 casas</option></select></label>
 </div>
 <div id="tableConfig">
-<div class="settings-block"><label class="checkbox-row"><input id="tableAllCombos" type="checkbox"> Treinar todas as combinações selecionadas</label></div>
-<div class="settings-block"><h3>Tabuadas ou divisores</h3><p>Selecione os números que deseja trabalhar.</p><div class="small-actions"><button id="allTables" type="button">Todas</button><button id="noTables" type="button">Limpar</button></div><div class="number-grid" id="tablesSetting"></div></div>
-<div class="settings-block"><h3>Fatores ignorados</h3><p>Operações que envolvem esses números serão excluídas.</p><div class="number-grid" id="excludeSetting"></div></div>
-<div class="settings-block field-row"><label>Multiplicador mínimo<input type="number" id="minSetting" min="0" max="20"></label><label>Multiplicador máximo<input type="number" id="maxSetting" min="0" max="20"></label></div>
+<div class="settings-block"><h3 id="tablesHeading">Tabuadas ou divisores</h3><p id="tablesDescription">Selecione os números que deseja trabalhar.</p><div class="small-actions"><button id="allTables" type="button">Todas</button><button id="noTables" type="button">Limpar</button></div><div class="number-grid" id="tablesSetting"></div></div>
+<div class="settings-block" id="factorExclusions"><h3>Fatores ignorados</h3><p>Operações que envolvem esses números serão excluídas.</p><div class="number-grid" id="excludeSetting"></div></div>
+<div class="settings-block field-row" id="factorRange"><label>Multiplicador mínimo<input type="number" id="minSetting" min="0" max="20"></label><label>Multiplicador máximo<input type="number" id="maxSetting" min="0" max="20"></label></div>
 <div class="settings-block" id="comboConfig"><label class="field">Combinações<select id="formatSetting"><option value="minimal">Sem equivalentes</option><option value="all">Todas as combinações</option></select></label></div>
 </div>
 <div class="settings-block" id="countConfig"><label class="field">Questões por ciclo<input id="countSetting" type="number" min="5" max="120"></label></div>
