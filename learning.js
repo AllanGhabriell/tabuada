@@ -699,7 +699,7 @@ function multiplicationInsight(item){
  if(cfg.operation!=="mul"||!item)return null;
  const m=item.prompt.match(/^([2-9]) × ([2-9]) = \?$/);
  if(!m)return null;
- const a=+m[1],b=+m[2],focus=[9,8,5,4,6,2].find(n=>a===n||b===n);
+ const a=+m[1],b=+m[2],focus=[9,8,5,4,6,2,3,7].find(n=>a===n||b===n);
  if(!focus)return null;
  const other=focus===a?b:a,result=a*b;
  const dict={
@@ -708,7 +708,9 @@ function multiplicationInsight(item){
   5:["Metade de 10","("+other+" × 10) ÷ 2 = "+result],
   4:["Dois dobros",other+" × 4 = "+(other*2)+" × 2 = "+result],
   6:["Triplo e dobro","("+other+" × 3) × 2 = "+result],
-  2:["Dobro",other+" + "+other+" = "+result]
+  2:["Dobro",other+" + "+other+" = "+result],
+  3:["Dobro mais um",other+" × 2 + "+other+" = "+result],
+  7:["Cinco mais dois",other+" × 5 + "+other+" × 2 = "+result]
  };
  return {focus,title:dict[focus][0],detail:dict[focus][1]};
 }
