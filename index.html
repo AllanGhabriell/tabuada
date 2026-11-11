@@ -452,6 +452,9 @@
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
   button:disabled{opacity:.5;cursor:not-allowed}
   @media(max-width:520px){.progress-panel{padding:14px}.training-card{padding:15px;min-height:320px}.result-grid{grid-template-columns:repeat(2,1fr)}.bottom-actions{justify-content:center}.progress-heading h2{font-size:15px}.btnrow{flex-wrap:wrap}}
+  .bottom-buttons{display:flex;gap:8px;flex-wrap:wrap}
+  body.focus-mode .progress-panel,body.focus-mode .bottom-actions #btnReview,body.focus-mode .bottom-actions #sessionStatus{display:none}
+  body.focus-mode .training-card{min-height:440px}
   </style>
 </head>
 
@@ -489,7 +492,7 @@
           <div class="feedback" id="feedback" role="status" aria-live="polite">Pronto para começar? Digite a resposta.</div>
           <div class="hint" id="hint">Responda no seu ritmo. Cada conta dominada aproxima você da conclusão.</div>
         </section>
-        <div class="bottom-actions"><button class="small" id="btnReview" type="button">↻ Revisar dificuldades</button><span id="sessionStatus">Seu progresso é salvo automaticamente.</span></div>
+        <div class="bottom-actions"><div class="bottom-buttons"><button class="small" id="btnReview" type="button">↻ Revisar dificuldades</button><button class="small" id="btnFocus" type="button" aria-pressed="false">⛶ Foco</button></div><span id="sessionStatus">Seu progresso é salvo automaticamente.</span></div>
       </main>
     </div>
   </div>
@@ -723,14 +726,18 @@
         return {text:"A resposta era "+(item.a*item.b)+". Vamos praticar novamente.",kind:"bad"};
       }
       state.correct++;item.good++;
-      const fast=ms<=2200,slow=ms>=6500;
+      const sessionAvg=state.correct+state.wrong>1?state.totalMs/(state.correct+state.wrong):4000;
+      const ownAvg=item.solved>1?item.totalMs/item.solved:sessionAvg;
+      const fastLimit=clamp(Math.round(ownAvg*.6),1800,3200);
+      const slowLimit=clamp(Math.round(ownAvg*1.65),5000,8500);
+      const fast=ms<=fastLimit,slow=ms>=slowLimit;
       // Sequência de acertos tem de ser construída sem erros nem pulos entre eles.
       item.streak+=1;
       if(slow){item.weight=Math.min(25,item.weight*1.28+.4)}
       else{item.weight=Math.max(.25,item.weight*(fast?.72:.83))}
       // Mínimo 3 acertos consecutivos; pelo menos 2 em tempo satisfatório.
       if(item.streak>=3&&item.good>=3&&item.solved>0&&
-         (item.good-item.wrong)>=2&&ms<6500&&item.weight<=1.6){
+         (item.good-item.wrong)>=2&&ms<slowLimit&&item.weight<=1.6){
         item.mastered=true;item.weight=0;
         return {text:"Dominou "+item.a+" × "+item.b+"! Mais uma concluída.",kind:"good"};
       }
@@ -877,6 +884,11 @@
     $("btnReview").addEventListener("click",beginReview);
     $("btnHistory").addEventListener("click",()=>{renderHistory();show($("overlayHistory"))});
     $("btnSkip").addEventListener("click",()=>answer(true));
+    $("btnFocus").addEventListener("click",()=>{
+      const on=document.body.classList.toggle("focus-mode");
+      $("btnFocus").setAttribute("aria-pressed",String(on));
+      $("btnFocus").textContent=on?"⛶ Sair do foco":"⛶ Foco";
+    });
     $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer()});
     $("btnExport").addEventListener("click",()=>{
       const blob=new Blob([JSON.stringify({version:2,settings:cfg,data:db},null,2)],{type:"application/json"});
