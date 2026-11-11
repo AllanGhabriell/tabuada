@@ -112,6 +112,8 @@ for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults
 c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;
 if(c.operation==="mul"){
  c.tables=c.tables.filter(x=>x>=2&&x<=9).sort((a,b)=>a-b);
+ if(c.essentialStage!=="custom"&&window.GaussEssentials.families[c.essentialStage])
+  c.tables=window.GaussEssentials.families[c.essentialStage];
  if(!c.tables.length)c.tables=[2,5];
  c.customNumbers=false;c.min=1;c.max=10;c.exclude=[];c.format="all";c.allCombos=true;
  c.negativeOperands=false;c.negativeResults=false;c.decimalOperands=false;c.decimalResults=false;
@@ -437,7 +439,7 @@ if(c.operation==="mul"||c.operation==="div"){
 const low=Math.min(c.min,c.max),high=Math.max(c.min,c.max);
 for(const a of c.tables)for(let b=low;b<=high;b++){
 if(c.exclude.includes(a)||c.exclude.includes(b))continue;
-if(c.operation==="div"&&a*b===0)continue;
+if(c.operation==="div"&&(a<=1||a===10||b<=1||b===10))continue;
  const factorA=c.operation==="mul"?a:a*b;
  const factorB=c.operation==="mul"?b:a;
  const answer=c.operation==="mul"?a*b:b;
@@ -931,7 +933,7 @@ $("factorRange").hidden=mul;
 $("countConfig").hidden=mul;
 $("comboConfig").hidden=mul;
 $("tablesHeading").textContent=mul?"Escolha as tabuadas de 1 a 10":"Tabuadas ou divisores";
-$("tablesDescription").textContent=mul?"Cada tabuada selecionada inclui as 10 multiplicações, de ×1 até ×10.":"Selecione os números que deseja trabalhar.";
+$("tablesDescription").textContent=mul?"Cada tabuada selecionada inclui 8 multiplicações, de ×2 até ×9. Zero, um e dez ficam fora dos exercícios.":"Selecione os números que deseja trabalhar.";
 const personalized=arithmetic(cfg.operation)&&(!multi||cfg.customNumbers);
 $("difficultyFilters").hidden=!arithmetic(cfg.operation)||mul;
 $("difficultyPreset").value=cfg.difficultyPreset;
@@ -994,7 +996,7 @@ function settingsDraft(){
 function updateComboPreview(){
  const c=settingsDraft();
  const preview=$("comboPreview");
- const len=c.operation==="mul"?c.tables.length*10:arithmeticCount(c);
+ const len=c.operation==="mul"?c.tables.length*8:arithmeticCount(c);
  preview.textContent=len<0?
  "Intervalo amplo · "+(c.allCombos?"reduza o intervalo para treinar todas":"até "+c.count+" questões sorteadas"):
  len.toLocaleString("pt-BR")+" combinações disponíveis"+
