@@ -252,6 +252,7 @@ $("btnBack").hidden=name==="home";$("btnSettings").hidden=name==="home";
 $("btnReset").hidden=name==="home";
 $("brandSubtitle").textContent=name==="home"?"Treine seu raciocínio matemático":op().name+" · "+modes.find(x=>x.id===cfg.mode).name;
 if(name==="workspace"){renderWorkspace();}else renderHome();
+window.scrollTo(0,0);
 }
 function renderHome(){
 const groups=[...new Set(operations.map(x=>x.group))],container=$("moduleGroups");
@@ -394,13 +395,13 @@ cfg.method=id;if(!startCycle()){createSettings();openModal("settingsModal");retu
 let tutorialIndex=0,tutorialSteps=[],tutorialPractice=null;
 function tutorialExample(){
  if(cfg.operation==="sub"){
-  if(cfg.method==="bridge")return {prompt:"9 − 6 = ?",answer:3};
-  if(cfg.method==="comp")return {prompt:"83 − 47 = ?",answer:36};
-  return {prompt:"15 − 7 = ?",answer:8};
+  if(cfg.method==="bridge")return {prompt:"14 − 8 = ?",answer:6};
+  if(cfg.method==="comp")return {prompt:"72 − 38 = ?",answer:34};
+  return {prompt:"13 − 5 = ?",answer:8};
  }
- if(cfg.operation==="root")return {prompt:"√50 ≈ ? (1 decimal)",answer:7.1};
- if(cfg.operation==="mul")return {prompt:"7 × 8 = ?",answer:56};
- if(cfg.operation==="add")return {prompt:"47 + 38 = ?",answer:85};
+ if(cfg.operation==="root")return {prompt:"√60 ≈ ? (1 decimal)",answer:7.7};
+ if(cfg.operation==="mul")return {prompt:"6 × 8 = ?",answer:48};
+ if(cfg.operation==="add")return {prompt:"58 + 27 = ?",answer:85};
  const sample=cycle?.items?.find(item=>!item.done)||cycle?.items?.[0];
  return sample?{prompt:sample.prompt,answer:sample.answer}:null;
 }
