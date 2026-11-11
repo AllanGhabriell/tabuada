@@ -445,7 +445,9 @@ cfg=saved&&!(saved.quickPreset!=="custom"&&saved.presetVersion<2)?
  normalize(saved):presetConfig(saved?.quickPreset&&saved.quickPreset!=="custom"?saved.quickPreset:"intermediate",id,{...defaultCfg,operation:id,method:"free"});
 cfg.operation=id;
 if(!M[id].some(x=>x.id===cfg.method))cfg.method="free";
-if(!cycle||cycle.complete||cycle.cfg.operation!==id){if(!startCycle()){createSettings();openModal("settingsModal");return}}
+const cycleChanged=!!cycle&&JSON.stringify(cycle.cfg)!==JSON.stringify(cfg);
+if(cycleChanged&&cycle&&!cycle.complete&&cycle.answered>0&&cycle.cfg.operation===id&&!confirm("As configurações deste módulo mudaram. Reiniciar o ciclo para aplicá-las?")){cfg=normalize(cycle.cfg);return}
+if(!cycle||cycle.complete||cycleChanged){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 persist();showPage("workspace");
 }
 function options(select,items,key){select.replaceChildren();for(const x of items){const o=document.createElement("option");o.value=x.id;o.textContent=x.name;select.append(o)}select.value=key}
