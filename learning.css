@@ -166,3 +166,8 @@
 .summary-skills>strong{font-size:12px;color:var(--text);display:block;margin-bottom:10px}
 .summary-skill-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:7px 0;border-top:1px solid var(--line)}
 .summary-skill-row span{color:var(--muted)}.summary-skill-row b{font-variant-numeric:tabular-nums;color:var(--text)}
+
+.home-overview{display:flex;gap:8px;flex-wrap:wrap;margin:-12px 0 25px}
+.home-overview span{display:flex;gap:5px;align-items:center;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:11px;color:var(--muted)}
+.home-overview strong{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+@media(max-width:650px){.home-overview{gap:6px;margin:-10px 0 19px}.home-overview span{font-size:10px;padding:7px 9px}.home-overview strong{font-size:12px}}
