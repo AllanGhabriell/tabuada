@@ -108,6 +108,7 @@ function supportsValue(c,a,b){
 }
 function arithmeticCount(c){
  const a=operandValues(c.aMin,c.aMax,c),b=operandValues(c.bMin,c.bMax,c);
+ if(a.length*b.length>120000)return -1;
  let count=0;
  for(const x of a)for(const y of b)if(supportsValue(c,x/(c.decimalOperands?10**c.decimalPlaces:1),y/(c.decimalOperands?10**c.decimalPlaces:1)))count++;
  return count;
@@ -118,9 +119,20 @@ function arithmeticProblems(c,push){
  const totalSize=left.length*right.length;
  if(c.allCombos&&totalSize>120000)throw Error("Intervalo muito amplo para todas as combinações. Reduza os valores.");
  const eligible=[];
- for(const x of left)for(const y of right){
-  const a=x/scale,b=y/scale;
-  if(supportsValue(c,a,b))eligible.push([a,b]);
+ if(totalSize>120000&&!c.allCombos){
+  const seen=new Set();let tries=0;
+  while(eligible.length<c.count&&tries<Math.max(5000,c.count*500)){
+   tries++;
+   const i=rand(0,left.length-1),j=rand(0,right.length-1),key=i+":"+j;
+   if(seen.has(key))continue;seen.add(key);
+   const a=left[i]/scale,b=right[j]/scale;
+   if(supportsValue(c,a,b))eligible.push([a,b]);
+  }
+ }else{
+  for(const x of left)for(const y of right){
+   const a=x/scale,b=y/scale;
+   if(supportsValue(c,a,b))eligible.push([a,b]);
+  }
  }
  if(!eligible.length)return;
  if(c.allCombos&&eligible.length>10000)throw Error("Esta seleção gera "+eligible.length.toLocaleString("pt-BR")+" operações. Limite de 10.000 por ciclo; reduza o intervalo.");
@@ -492,9 +504,11 @@ function updateComboPreview(){
  const c=settingsDraft();
  const preview=$("comboPreview");
  const len=arithmeticCount(c);
- preview.textContent=len.toLocaleString("pt-BR")+" combinações disponíveis"+
+ preview.textContent=len<0?
+ "Intervalo amplo · "+(c.allCombos?"reduza o intervalo para treinar todas":"até "+c.count+" questões sorteadas"):
+ len.toLocaleString("pt-BR")+" combinações disponíveis"+
  (c.allCombos?" · ciclo completo":(" · até "+Math.min(c.count,len)+" por ciclo"));
- preview.dataset.warning=c.allCombos&&len>10000?"true":"false";
+ preview.dataset.warning=c.allCombos&&(len<0||len>10000)?"true":"false";
  if(cfg.operation==="mul"||cfg.operation==="div"){
   $("operandConfig").hidden=!c.customNumbers;
   $("tableConfig").hidden=c.customNumbers;
