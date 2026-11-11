@@ -89,7 +89,7 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"intermediate",difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
 function normalize(c){
 const previous=c&&typeof c==="object"?c:{};
 const legacyDifficulty=!Object.prototype.hasOwnProperty.call(previous,"difficultyPreset");
@@ -364,7 +364,7 @@ if(cycle&&!cycle.complete&&cycle.answered>0&&cycle.cfg.operation!==id){
 if(!confirm("Iniciar outro módulo? O ciclo atual ainda não foi concluído."))return;
 }
 profiles[cfg.operation]=clone(cfg);
-cfg=normalize(profiles[id]||{...defaultCfg,operation:id,method:"free"});cfg.operation=id;
+cfg=normalize(profiles[id]||presetConfig("intermediate",id,{...defaultCfg,operation:id,method:"free"}));cfg.operation=id;
 if(!M[id].some(x=>x.id===cfg.method))cfg.method="free";
 if(!cycle||cycle.complete||cycle.cfg.operation!==id){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 persist();showPage("workspace");
