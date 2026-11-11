@@ -17,7 +17,8 @@ const operations=[
 {id:"prime",name:"Números primos",symbol:"#",group:"Números",desc:"Reconhecer e identificar"},
 {id:"power",name:"Potenciação",symbol:"x²",group:"Potências e raízes",desc:"Potências e quadrados"},
 {id:"root",name:"Radiciação",symbol:"√",group:"Potências e raízes",desc:"Raízes exatas e estimadas"},
-{id:"scientific",name:"Notação científica",symbol:"10ⁿ",group:"Aplicações",desc:"Potências de dez"}
+{id:"scientific",name:"Notação científica",symbol:"10ⁿ",group:"Aplicações",desc:"Potências de dez"},
+...window.MentalExtra.operations
 ];
 const modes=[
 {id:"learning",name:"Aprender",desc:"Dois acertos seguidos; sem limite de velocidade."},
@@ -79,7 +80,8 @@ root:[
 scientific:[
 {id:"free",name:"Livre",guide:["Expresse números usando potências de dez.","0,00045 equivale a 4,5 × 10⁻⁴.","Conte as casas deslocadas pela vírgula."]},
 {id:"shift",name:"Deslocamento decimal",guide:["Mova a vírgula até obter valor entre 1 e 10.","0,00045 vira 4,5, deslocando quatro casas.","O expoente é −4."]}
-]
+],
+...window.MentalExtra.methods
 };
 const defaultCfg={operation:"mul",method:"free",mode:"intelligent",level:1,tables:[3,4,6,7,8,9],exclude:[1,10],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check"};
 function normalize(c){c={...clone(defaultCfg),...(c&&typeof c==="object"?c:{})};if(!operations.some(x=>x.id===c.operation))c.operation="mul";if(!modes.some(x=>x.id===c.mode))c.mode="intelligent";if(!M[c.operation].some(x=>x.id===c.method))c.method="free";c.level=limit(Number(c.level)||1,1,3);c.count=limit(Number(c.count)||24,5,120);c.min=limit(Number(c.min)||1,0,20);c.max=limit(Number(c.max)||10,0,20);c.tables=Array.isArray(c.tables)?[...new Set(c.tables.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.tables);c.exclude=Array.isArray(c.exclude)?[...new Set(c.exclude.map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=12))]:clone(defaultCfg.exclude);c.format=c.format==="all"?"all":"minimal";c.rootType=["exact","estimate"].includes(c.rootType)?c.rootType:"exact";c.primeType=["check","list"].includes(c.primeType)?c.primeType:"check";return c}
@@ -99,6 +101,7 @@ const fractional=(a,b)=>{const g=gcd(Math.abs(a),Math.abs(b));return (a/g)+"/"+(
 function generate(c){
 const out=[],seen=new Set(),L=c.level,method=c.method;
 const push=(prompt,answer,id)=>{if(!seen.has(id||prompt)){seen.add(id||prompt);out.push(p(prompt,answer,id))}};
+if(window.MentalExtra.methods[c.operation]){window.MentalExtra.create(c,push);return out;}
 if(c.operation==="mul"||c.operation==="div"){
 const low=Math.min(c.min,c.max),high=Math.max(c.min,c.max);
 for(const a of c.tables)for(let b=low;b<=high;b++){
