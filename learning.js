@@ -247,6 +247,7 @@ function renderMethodCards(){
   root.append(button);
  }
  $("selectedMethodName").textContent=method().name;
+$("compactMethod").textContent=method().name;
 }
 const p=(prompt,answer,id)=>({id:id||prompt,prompt,answer,weight:1,streak:0,attempts:0,wrong:0,correct:0,done:false,time:0});
 const formatNumber=x=>new Intl.NumberFormat("pt-BR",{useGrouping:false,maximumFractionDigits:12}).format(x);
@@ -805,7 +806,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelect
 function tick(){const t=$("timeDisplay");if(cfg.showTimer&&page==="workspace"&&!cycle?.complete){t.hidden=false;t.textContent=(current&&!locked?((performance.now()-started)/1000).toFixed(1):"0.0")+"s"}else t.hidden=true;tickHandle=requestAnimationFrame(tick)}
 if(cycle&&cycle.cfg?.operation!==cfg.operation)cycle=null;
 if(cycle&&cycle.complete)current=null;
-const panelDefaults={workspaceOptions:false,workspaceProgress:false};
+const panelDefaults={workspaceOptions:true,workspaceProgress:false};
 let panels={...panelDefaults,...(read(PANEL_KEY)||{})};
 for(const name of ["workspaceOptions","workspaceProgress"]){
  const el=$(name);el.open=!!panels[name];
