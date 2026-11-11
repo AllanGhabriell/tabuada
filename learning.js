@@ -867,13 +867,15 @@ document.addEventListener("keydown",e=>{
  const editing=!!target?.closest?.("input,textarea,select,[contenteditable='true']");
  const key=e.key.toLowerCase();
  const textAnswer=cfg.operation==="prime"&&cfg.primeType==="check";
- if(key==="?"&&!editing){e.preventDefault();openModal("shortcutModal");return}
+ const numericAnswer=target===$("answer")&&!textAnswer;
+ const shortcutsAllowed=!editing||numericAnswer;
+ if(key==="?"&&shortcutsAllowed){e.preventDefault();openModal("shortcutModal");return}
  if(page!=="workspace")return;
  // A tecla S funciona mesmo com foco no campo numérico. Respostas em texto ficam protegidas.
- if(key==="s"&&(!editing||target===$("answer")&&!textAnswer)){
+ if(key==="s"&&shortcutsAllowed){
   e.preventDefault();shortcutExit();return;
  }
- if(editing)return;
+ if(!shortcutsAllowed)return;
  if(key==="p"){e.preventDefault();answer(true)}
  else if(key==="d"){e.preventDefault();$("btnStrategyHint").click()}
  else if(key==="c"){e.preventDefault();$("btnSettings").click()}
