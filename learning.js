@@ -89,7 +89,7 @@ scientific:[
 ],
 ...window.MentalExtra.methods
 };
-const defaultCfg={presetVersion:4,essentialStage:"starter",operation:"mul",method:"free",mode:"intelligent",level:1,tables:[2,5],exclude:[],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
+const defaultCfg={assistMode:'auto',assistDelay:15,assistColor:true,presetVersion:4,essentialStage:"starter",operation:"mul",method:"free",mode:"intelligent",level:1,tables:[2,5],exclude:[],min:1,max:10,count:24,showTimer:false,autofocus:true,format:"minimal",rootType:"exact",primeType:"check",aMin:0,aMax:10,bMin:0,bMax:10,allCombos:false,negativeResults:false,negativeOperands:false,decimalOperands:false,decimalResults:false,decimalPlaces:1,customNumbers:false,quickPreset:"custom",customBase:null,difficultyPreset:"balanced",excludeEqual:true,excludeZero:false,excludeOne:false,excludeSmallResults:false};
 function normalize(c){
 const previous=c&&typeof c==="object"?c:{};
 const legacyDifficulty=!Object.prototype.hasOwnProperty.call(previous,"difficultyPreset");
@@ -109,7 +109,7 @@ c.quickPreset=["easy","intermediate","hard","expert","custom"].includes(c.quickP
 c.customBase=["easy","intermediate","hard","expert"].includes(c.customBase)?c.customBase:null;
 c.difficultyPreset=["basic","balanced","hard","custom"].includes(c.difficultyPreset)?c.difficultyPreset:"balanced";
 for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults"])c[key]=!!c[key];
-c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;
+c.decimalPlaces=c.decimalPlaces===2||c.decimalPlaces==="2"?2:1;c.assistMode=['auto','manual','off'].includes(c.assistMode)?c.assistMode:'auto';c.assistDelay=limit(Number(c.assistDelay)||15,5,60);c.assistColor=c.assistColor!==false;
 if(c.operation==="mul"){
  c.tables=c.tables.filter(x=>x>=2&&x<=9).sort((a,b)=>a-b);
  if(c.essentialStage!=="custom"&&window.GaussEssentials.families[c.essentialStage])
@@ -634,7 +634,7 @@ function renderProgress(){
  $("cycleMiniFill").style.width=percentage+"%";
  $("miniMastered").textContent=status.mastered;
  $("miniNew").textContent=status.unseen;
- $("miniReview").textContent=status.reviewed+status.unresolved;
+ $("miniReview").textContent=status.reviewed+status.unresolved;renderAssistAnalysis();
 }
 function choose(){
  const unseen=cycle.items.filter(x=>!x.firstSeen);
@@ -686,18 +686,74 @@ function strategyForQuestion(item){
  if(technique==="bridge")return "Passagem pela dezena: primeiro retire o suficiente para chegar a uma dezena inteira. Depois retire o restante.";
  return method().guide[0];
 }
+
+let assistCueShown=false,assistExpanded=false;
+function assistState(){if(!cycle.assist)cycle.assist={independent:0,helped:0,slow:0,totalMs:0,validTimes:0,cues:0,expanded:0};return cycle.assist}
+function multiplicationInsight(item){
+ if(cfg.operation!=="mul"||!item)return null;
+ const m=item.prompt.match(/^([2-9]) × ([2-9]) = \?$/);
+ if(!m)return null;
+ const a=+m[1],b=+m[2],focus=[9,8,5,4,6,2].find(n=>a===n||b===n);
+ if(!focus)return null;
+ const other=focus===a?b:a,result=a*b;
+ const dict={
+  9:["Perto do 10",other+" × 10 − "+other+" = "+result],
+  8:["Dobros",other+" × 8 = "+other*2+" × 4 = "+other*4+" × 2 = "+result],
+  5:["Metade de 10","("+other+" × 10) ÷ 2 = "+result],
+  4:["Dois dobros",other+" × 4 = "+other*2+" × 2 = "+result],
+  6:["Triplo e dobro","("+other+" × 3) × 2 = "+result],
+  2:["Dobro",other+" + "+other+" = "+result]
+ };
+ return {focus,title:dict[focus][0],detail:dict[focus][1]};
+}
+function showAssistCue(){
+ if(assistCueShown||locked||!current||cfg.assistMode!=='auto')return;
+ const insight=multiplicationInsight(current);if(!insight)return;
+ assistCueShown=true;assistState().cues++;
+ $("assistCue").hidden=false;$("assistCue").textContent=insight.title;
+ if(cfg.assistColor){
+  const m=current.prompt.match(/^([2-9]) × ([2-9]) = \?$/);
+  if(m){
+   $("problem").replaceChildren();
+   for(let i=1;i<=2;i++){
+    if(i===2)$("problem").append(document.createTextNode(" × "));
+    const part=document.createElement("span");part.textContent=m[i];
+    if(Number(m[i])===insight.focus&&(i===1||m[1]!==m[2]))part.className="assist-focus";
+    $("problem").append(part);
+   }
+   $("problem").append(document.createTextNode(" = ?"));
+  }
+ }
+ persist();renderAssistAnalysis();
+}
+function renderAssistAnalysis(){
+ if(!cycle)return;
+ const a=assistState(),all=a.independent+a.helped;
+ $("assistIndependent").textContent=a.independent;
+ $("assistWithHelp").textContent=a.helped;
+ $("assistSlowCount").textContent=a.slow;
+ $("assistAvgTime").textContent=a.validTimes?(a.totalMs/a.validTimes/1000).toFixed(1).replace('.',',')+'s':'—';
+ $("assistAnalysisText").textContent=all?Math.round(100*a.independent/all)+'% dos acertos sem assistência. Acompanhe se essa proporção aumenta nos próximos treinos.':'Resolva contas para acompanhar sua autonomia.';
+}
+function refreshAssistMode(){
+ $("btnStrategyHint").hidden=cfg.assistMode==='off';
+ if(cfg.assistMode==='off'||cfg.assistMode==='manual'){
+  $("assistCue").hidden=true;$("problem").textContent=current?.prompt||'';
+  if(cfg.assistMode==='off')$("strategyHintText").hidden=true;
+ }
+}
 function showQuestion(){
 if(cycle.complete)return renderFinished();
 if(current&&!locked&&cycle.items.includes(current)&&!current.done){
 }else current=choose();
 if(!current)return finish();
-cycle.last=current.id;locked=false;started=performance.now();
+cycle.last=current.id;locked=false;started=performance.now();assistCueShown=false;assistExpanded=false;
 $("problem").textContent=current.prompt;
 $("questionSkill").hidden=!current.skill;
 $("questionSkill").textContent=current.skill||"";
 $("strategyHintText").hidden=true;
 $("btnStrategyHint").setAttribute("aria-expanded","false");
-$("strategyHintText").textContent=strategyForQuestion(current);
+$("strategyHintText").textContent=multiplicationInsight(current)?.detail||strategyForQuestion(current);$("assistCue").hidden=true;refreshAssistMode();
 $("answer").value="";$("answer").disabled=false;$("submitAnswer").disabled=false;$("skipAnswer").disabled=false;
 $("answer").placeholder=cfg.operation==="prime"&&cfg.primeType==="check"?"sim ou não":cfg.operation==="fraction"?"Ex.: 3/4":"Sua resposta";
 $("answer").setAttribute("inputmode",["prime","fraction"].includes(cfg.operation)?"text":"decimal");
@@ -727,11 +783,11 @@ function answer(skip){
  if(!skip&&!raw){$("answer").focus();return}
  if(!skip&&!answerLooksValid(raw)){notify("Digite uma resposta numérica válida ou sim/não.");return}
  locked=true;
- const ms=Math.max(0,performance.now()-started);
+ const ms=Math.max(0,performance.now()-started);const assist=assistState();if(!skip){assist.validTimes++;assist.totalMs+=ms;if(ms>=cfg.assistDelay*1000)assist.slow++}
  const first=!current.firstSeen;
  current.firstSeen=true;
  current.attempts++;cycle.answered++;
- const correct=!skip&&answerEquivalent(raw,current.answer);
+ const correct=!skip&&answerEquivalent(raw,current.answer);if(correct){if(assistCueShown||assistExpanded||current.hintUsed)assist.helped++;else assist.independent++}
  let kind="good",message="";
  if(skip){cycle.skips++;current.streak=0;current.wrong++;current.weight=Math.min(25,current.weight*1.6+1);kind="warn";message="Pulou · "+cleanAnswer(current.answer)}
  else if(correct){
@@ -755,7 +811,7 @@ function answer(skip){
   if(current.reviewStreak>=2){current.mastered=true;current.done=true}
   if(current.reviews>=cycle.reviewLimit)current.done=true;
  }
- $("feedback").textContent=message;$("feedback").dataset.kind=kind;
+ $("feedback").textContent=message;$("feedback").dataset.kind=kind;$("assistCue").hidden=true;
  $("answer").disabled=true;$("submitAnswer").disabled=true;$("skipAnswer").disabled=true;
  renderProgress();persist();
  if(nextTimeout)clearTimeout(nextTimeout);
@@ -774,7 +830,7 @@ function finish(){
    id:cycle.id,operation:cfg.operation,mode:cfg.mode,method:cfg.method,
    level:cfg.quickPreset,ended:new Date().toISOString(),count:status.total,
    mastered:status.mastered,pending:status.unresolved,firstPassCorrect:cycle.firstPassCorrect||0,
-   hints:cycle.hints||0,correct:cycle.correct,wrong:cycle.wrong,skips:cycle.skips,
+   hints:cycle.hints||0,assistance:clone(assistState()),correct:cycle.correct,wrong:cycle.wrong,skips:cycle.skips,
    skills:Object.entries(cycle.items.reduce((acc,item)=>{
     const skill=item.skill||"Geral";const v=acc[skill]||(acc[skill]={total:0,mastered:0});
     v.total++;if(item.mastered)v.mastered++;return acc
@@ -801,7 +857,7 @@ function renderFinished(){
  $("endAvg").textContent=cycle.correct+cycle.wrong?(cycle.totalMs/(cycle.correct+cycle.wrong)/1000).toFixed(1).replace(".",",")+"s":"—";
  $("summaryOutcome").textContent=status.mastered+" dominadas · "+status.unresolved+
  " para revisar em outra sessão. Precisão inicial: "+$("endAccuracy").textContent+".";
- $("reviewCompleted").disabled=status.unresolved===0;
+ const assist=assistState();$("summaryAssistance").textContent="Acertos sem ajuda: "+assist.independent+" · Com ajuda: "+assist.helped+" · Respostas demoradas: "+assist.slow; $("reviewCompleted").disabled=status.unresolved===0;
  const stages=window.GaussEssentials.stages[cfg.operation]||[];
  const choices=stages.filter(stage=>stage.id!=="all"&&stage.id!=="custom");
  const index=choices.findIndex(stage=>stage.id===cfg.essentialStage);
@@ -932,7 +988,7 @@ function fillPresetForm(c){
  updateComboPreview();
 }
 function createSettings(){
-draftPreset=cfg.quickPreset||"custom";
+draftPreset=cfg.quickPreset||"custom";$('assistanceConfig').hidden=cfg.operation!=='mul';$('assistMode').value=cfg.assistMode;$('assistDelay').value=cfg.assistDelay;$('assistColor').checked=cfg.assistColor;$('assistDelayRow').hidden=cfg.assistMode!=='auto';
 draftBasePreset=cfg.customBase||null;
 pendingPresetConfig=null;
 renderPresetSelection();
@@ -992,7 +1048,7 @@ function settingsDraft(){
  return normalize({...cfg,...(pendingPresetConfig||{}),level:Number($("levelSetting").value),count:Number($("countSetting").value),
  min:Number($("minSetting").value),max:Number($("maxSetting").value),
  format:$("formatSetting").value,rootType:$("rootSetting").value,primeType:$("primeSetting").value,
- showTimer:$("timerSetting").checked,autofocus:$("focusSetting").checked,
+ showTimer:$("timerSetting").checked,autofocus:$("focusSetting").checked,assistMode:$("assistMode").value,assistDelay:Number($("assistDelay").value),assistColor:$("assistColor").checked,
  tables:getNums("t"),exclude:getNums("e"),
  customNumbers:$("customNumbers").checked,
  aMin:$("operandAMin").value,aMax:$("operandAMax").value,
@@ -1036,7 +1092,7 @@ function applySettings(){
  if((cfg.operation==="mul"||cfg.operation==="div")&&!next.customNumbers&&!next.tables.length){
   notify("Selecione pelo menos uma tabuada.");return;
  }
- const isSame=(x,y)=>JSON.stringify({...x,showTimer:false,autofocus:false})===JSON.stringify({...y,showTimer:false,autofocus:false});
+ const isSame=(x,y)=>JSON.stringify({...x,showTimer:false,autofocus:false,assistMode:"auto",assistDelay:15,assistColor:true})===JSON.stringify({...y,showTimer:false,autofocus:false,assistMode:"auto",assistDelay:15,assistColor:true});
  const changed=!isSame(cfg,next);
  if(changed&&cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Essas alterações iniciam um novo ciclo. Continuar?"))return;
  const previous=cfg;cfg=next;
@@ -1099,7 +1155,7 @@ $("methodSelect").addEventListener("change",e=>changeMethod(e.target.value));
 $("modeSelect").addEventListener("change",e=>changeMode(e.target.value));
 $("methodHelp").addEventListener("click",displayGuide);
 $("btnStrategyHint").addEventListener("click",()=>{
- const note=$("strategyHintText");note.hidden=!note.hidden;
+ if(cfg.assistMode==="off"||!current||locked)return;const note=$("strategyHintText");note.hidden=!note.hidden;if(!note.hidden){assistExpanded=true;assistState().expanded++;renderAssistAnalysis()}
  if(!note.hidden&&current&&!current.hintUsed){current.hintUsed=true;cycle.hints=(cycle.hints||0)+1;persist()}
  $("btnStrategyHint").setAttribute("aria-expanded",String(!note.hidden));
 });
@@ -1210,6 +1266,7 @@ for(const key of ["excludeEqual","excludeZero","excludeOne","excludeSmallResults
   updateComboPreview();
  });
 }
+$("assistMode").addEventListener("change",()=>{$("assistDelayRow").hidden=$("assistMode").value!=="auto"});
 $("settingsModal").addEventListener("change",event=>{
  if(event.target.matches('input,select'))updateComboPreview();
 });
@@ -1269,7 +1326,7 @@ document.addEventListener("keydown",e=>{
  else if(key==="f"||e.key===" "){e.preventDefault();$("answer").focus({preventScroll:true})}
  else if(e.key==="Enter"&&$("trainingArea").hidden===false){e.preventDefault();answer(false)}
 });
-function tick(){const t=$("timeDisplay");if(cfg.showTimer&&page==="workspace"&&!cycle?.complete){t.hidden=false;t.textContent=(current&&!locked?((performance.now()-started)/1000).toFixed(1):"0.0")+"s"}else t.hidden=true;tickHandle=requestAnimationFrame(tick)}
+function tick(){if(page==="workspace"&&!locked&&current&&cfg.operation==="mul"&&cfg.assistMode==="auto"&&!assistCueShown&&performance.now()-started>=cfg.assistDelay*1000)showAssistCue();const t=$("timeDisplay");if(cfg.showTimer&&page==="workspace"&&!cycle?.complete){t.hidden=false;t.textContent=(current&&!locked?((performance.now()-started)/1000).toFixed(1):"0.0")+"s"}else t.hidden=true;tickHandle=requestAnimationFrame(tick)}
 if(cycle&&cycle.cfg?.operation!==cfg.operation)cycle=null;
 if(cycle&&cycle.complete)current=null;
 const panelDefaults={workspaceOptions:true,workspaceProgress:false};
