@@ -312,10 +312,10 @@ function migrateCycle(c){
 cycle=migrateCycle(cycle);
 if(cycle?.cfg?.operation==="mul"){
  const acceptable=cycle.items.every(item=>{
-  const m=String(item.prompt||"").match(/^([1-9]|10) × ([1-9]|10) = \?$/);
+  const m=String(item.prompt||"").match(/^([2-9]) × ([2-9]) = \?$/);
   return m&&cfg.operation==="mul"&&cfg.tables.includes(Number(m[1]))&&Number(item.answer)===Number(m[1])*Number(m[2]);
  });
- if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==cfg.tables.length*10))cycle=null;
+ if(!acceptable||(!cycle.reviewSession&&cycle.items.length!==cfg.tables.length*8))cycle=null;
 }
 let current=null,started=0,locked=false,nextTimeout=0,tickHandle=0,page="home",lastKey="";
 const mobileView=matchMedia("(max-width:650px) and (pointer:coarse)");
@@ -323,19 +323,60 @@ let mobileNativeKeyboard=false;
 const single=m=>["random","sequential","fluency"].includes(m);
 const op=()=>operations.find(x=>x.id===cfg.operation);
 const method=()=>M[cfg.operation].find(x=>x.id===cfg.method);
+function essentialItemAllowed(item,c=cfg){
+ if(["add","sub","mul","div"].includes(c.operation)&&!window.GaussEssentials.valid(c.operation,item,c.tables))return false;
+ if(c.essentialStage!=="custom"&&["add","sub","mul","div"].includes(c.operation)){
+  const prompts=new Set(window.GaussEssentials.make(c.operation,c.essentialStage).map(x=>x.prompt));
+  return prompts.has(item.prompt);
+ }
+ return true;
+}
+function renderEssentialCards(){
+ const relevant=["add","sub","mul","div"].includes(cfg.operation);
+ $("essentialPanel").hidden=!relevant;
+ if(!relevant)return;
+ const root=$("essentialCards");root.replaceChildren();
+ const stages=window.GaussEssentials.stages[cfg.operation];
+ const stage=window.GaussEssentials.label(cfg.operation,cfg.essentialStage);
+ $("essentialCurrent").textContent=stage?.name||"Treino";
+ $("essentialIntro").textContent=stage?.hint||"Escolha o conteúdo que deseja praticar.";
+ for(const item of stages){
+  const b=document.createElement("button");b.type="button";b.className="essential-option";
+  b.setAttribute("aria-pressed",String(cfg.essentialStage===item.id));
+  b.dataset.active=String(cfg.essentialStage===item.id);
+  const title=document.createElement("strong");title.textContent=item.name;
+  const desc=document.createElement("small");desc.textContent=item.desc;
+  b.append(title,desc);b.addEventListener("click",()=>changeEssentialStage(item.id));
+  root.append(b);
+ }
+}
+function changeEssentialStage(id){
+ if(id===cfg.essentialStage)return;
+ if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Trocar a etapa reiniciará o ciclo. Continuar?"))return;
+ const old=cfg;
+ const changes={...cfg,essentialStage:id,quickPreset:"custom",customBase:cfg.customBase};
+ if(["mul","div"].includes(cfg.operation)&&window.GaussEssentials.families[id]){
+  changes.tables=window.GaussEssentials.families[id];
+ }
+ if(cfg.operation==="sub")changes.method=id==="all"?"auto":id==="equal"?"equal":id==="comp"?"comp":id==="countup"?"countup":id==="bridge"?"bridge":"free";
+ if(cfg.operation==="add")changes.method=id==="split"?"split":"free";
+ cfg=normalize(changes);
+ if(!startCycle()){cfg=old;return}
+ persist();renderWorkspace();
+}
 function multiplicationAllowed(item,c=cfg){
  if(c.operation!=="mul")return true;
- const match=String(item.prompt||"").match(/^([1-9]|10) × ([1-9]|10) = \?$/);
+ const match=String(item.prompt||"").match(/^([2-9]) × ([2-9]) = \?$/);
  if(!match)return false;
  const a=Number(match[1]),b=Number(match[2]);
- return c.tables.includes(a)&&b>=1&&b<=10&&Number(item.answer)===a*b;
+ return c.tables.includes(a)&&b>=2&&b<=9&&Number(item.answer)===a*b;
 }
 function showMultiplicationPicker(){
  const show=cfg.operation==="mul";
  $("multiplicationPicker").hidden=!show;
  if(!show)return;
  const grid=$("mulPickerGrid");grid.replaceChildren();
- for(let n=1;n<=10;n++){
+ for(let n=2;n<=9;n++){
   const label=document.createElement("label");label.className="mul-option";
   const check=document.createElement("input");check.type="checkbox";check.value=String(n);
   check.checked=cfg.tables.includes(n);check.dataset.mulTable=String(n);
@@ -344,11 +385,11 @@ function showMultiplicationPicker(){
  }
  updateMulPickerCount();
  $("mulSelectedLabel").textContent=cfg.tables.join(", ");
- $("mulTotalLabel").textContent=(cfg.tables.length*10)+" contas";
+ $("mulTotalLabel").textContent=(cfg.tables.length*8)+" contas";
 }
 function updateMulPickerCount(){
  const nums=[...document.querySelectorAll("input[data-mul-table]:checked")].map(x=>Number(x.value));
- $("mulSelectionCount").textContent=nums.length+" tabuada"+(nums.length===1?"":"s")+" · "+(nums.length*10)+" contas";
+ $("mulSelectionCount").textContent=nums.length+" tabuada"+(nums.length===1?"":"s")+" · "+(nums.length*8)+" contas";
  $("mulApply").disabled=nums.length===0;
 }
 
@@ -542,13 +583,14 @@ function options(select,items,key){select.replaceChildren();for(const x of items
 function renderWorkspace(){
 if(!cycle||cycle.cfg.operation!==cfg.operation){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 options($("modeSelect"),modes,cfg.mode);
+renderEssentialCards();
 showMultiplicationPicker();
 options($("methodSelect"),M[cfg.operation],cfg.method);
 renderMethodCards();
 $("moduleTitle").textContent=op().name;$("questionOperation").textContent=op().name.toUpperCase()+" · RESOLVA MENTALMENTE";$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
 $("methodHelp").disabled=false;
 $("btnReview").hidden=!history.some(h=>h.operation===cfg.operation&&
- Array.isArray(h.hard)&&h.hard.some(item=>cfg.operation!=="mul"||multiplicationAllowed(item)));
+ Array.isArray(h.hard)&&h.hard.some(item=>essentialItemAllowed(item)));
 renderProgress();
 if(cycle.complete){renderFinished();return}
 showQuestion();
@@ -778,7 +820,7 @@ function renderFinished(){
  renderProgress();
 }
 function startPendingReview(items){
- if(cfg.operation==="mul")items=items.filter(item=>multiplicationAllowed(item));
+ items=items.filter(item=>essentialItemAllowed(item));
  if(!items.length){notify("Não há questões pendentes para revisar.");return}
  if(nextTimeout){clearTimeout(nextTimeout);nextTimeout=0}
  cfg.mode="learning";
@@ -984,7 +1026,7 @@ function applySettings(){
 }
 function review(){
  const last=history.find(x=>x.operation===cfg.operation&&Array.isArray(x.hard)&&
- x.hard.some(item=>cfg.operation!=="mul"||multiplicationAllowed(item)));
+ x.hard.some(item=>essentialItemAllowed(item)));
  if(!last){notify("Ainda não há dificuldades registradas para este módulo.");return}
  if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Iniciar revisão e substituir o ciclo atual?"))return;
  startPendingReview(last.hard);
@@ -1026,10 +1068,10 @@ $("mulPickNone").addEventListener("click",()=>{
 $("mulApply").addEventListener("click",()=>{
  const selected=[...document.querySelectorAll("input[data-mul-table]:checked")].map(x=>Number(x.value)).sort((a,b)=>a-b);
  if(!selected.length){notify("Escolha pelo menos uma tabuada.");return}
- if(selected.join(",")===cfg.tables.join(",")){$("multiplicationPicker").open=false;return}
+ if(selected.join(",")===cfg.tables.join(",")&&cfg.essentialStage==="custom"){$("multiplicationPicker").open=false;return}
  if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Trocar as tabuadas reinicia o ciclo atual. Continuar?"))return;
  const oldCfg=cfg;
- cfg=normalize({...cfg,tables:selected,quickPreset:"custom",customBase:null});
+ cfg=normalize({...cfg,tables:selected,essentialStage:"custom",quickPreset:"custom",customBase:null});
  if(!startCycle()){cfg=oldCfg;return}
  $("multiplicationPicker").open=false;renderWorkspace();
 });
