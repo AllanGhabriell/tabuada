@@ -406,6 +406,31 @@ const w=pool.map(x=>Math.max(.25,x.weight));let r=Math.random()*w.reduce((a,b)=>
 for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}
 return pool[pool.length-1];
 }
+function strategyForQuestion(item){
+ if(!item)return "";
+ if(cfg.operation!=="sub")return (method()?.guide?.[0]||"Pense em um cálculo equivalente.");
+ const match=item.prompt.match(/^(-?[\d.,]+) − (?:\((-?[\d.,]+)\)|(-?[\d.,]+)) = \?$/);
+ if(!match)return method().guide[0];
+ const a=Number(match[1].replace(",",".").replace(/\./g,"")),b=Number((match[2]||match[3]).replace(",",".").replace(/\./g,""));
+ if(!Number.isFinite(a)||!Number.isFinite(b))return method().guide[0];
+ let technique=cfg.method;
+ if(technique==="auto"||technique==="free"){
+  const d=a-b,near=Math.min(Math.abs(b)%10,10-(Math.abs(b)%10));
+  technique=(a>b&&d<=12&&a>=20)?"countup":(a>=20&&b>=10&&near<=4&&near>0)?"equal":(a>=20&&b>=10)?"split":"bridge";
+ }
+ if(technique==="equal"){
+  const rem=((b%10)+10)%10,plus=(10-rem)%10;
+  const delta=rem<=plus?-rem:plus;
+  if(delta===0)return "Diferença constante: escolha um valor igual para ajustar os dois números, sem alterar a diferença.";
+  return "Diferença constante: "+formatNumber(a)+" − "+formatNumber(b)+" pode virar "+
+   formatNumber(a+delta)+" − "+formatNumber(b+delta)+". Ajuste ambos pelo mesmo valor.";
+ }
+ if(technique==="countup")return "Completar pela soma: parta de "+formatNumber(b)+" e descubra quanto falta para chegar a "+formatNumber(a)+".";
+ if(technique==="split")return "Subtrair por partes: separe "+formatNumber(b)+" em dezenas e unidades; retire uma parte de cada vez.";
+ if(technique==="comp")return "Compensação: aproxime "+formatNumber(b)+" de uma dezena. Depois corrija o resultado pelo valor acrescentado ou retirado.";
+ if(technique==="bridge")return "Passagem pela dezena: primeiro retire o suficiente para chegar a uma dezena inteira. Depois retire o restante.";
+ return method().guide[0];
+}
 function showQuestion(){
 if(cycle.complete)return renderFinished();
 if(current&&!locked&&cycle.items.includes(current)&&!current.done){
@@ -413,6 +438,9 @@ if(current&&!locked&&cycle.items.includes(current)&&!current.done){
 if(!current)return finish();
 cycle.last=current.id;locked=false;started=performance.now();
 $("problem").textContent=current.prompt;
+$("strategyHintText").hidden=true;
+$("btnStrategyHint").setAttribute("aria-expanded","false");
+$("strategyHintText").textContent=strategyForQuestion(current);
 $("answer").value="";$("answer").disabled=false;$("submitAnswer").disabled=false;$("skipAnswer").disabled=false;
 $("answer").placeholder=cfg.operation==="prime"&&cfg.primeType==="check"?"sim ou não":cfg.operation==="fraction"?"Ex.: 3/4":"Sua resposta";
 $("answer").setAttribute("inputmode",["prime","fraction"].includes(cfg.operation)?"text":"decimal");
@@ -677,6 +705,10 @@ $("btnReset").addEventListener("click",()=>{if(cycle&&!cycle.complete&&cycle.ans
 $("methodSelect").addEventListener("change",e=>changeMethod(e.target.value));
 $("modeSelect").addEventListener("change",e=>changeMode(e.target.value));
 $("methodHelp").addEventListener("click",displayGuide);
+$("btnStrategyHint").addEventListener("click",()=>{
+ const note=$("strategyHintText");note.hidden=!note.hidden;
+ $("btnStrategyHint").setAttribute("aria-expanded",String(!note.hidden));
+});
 $("guidePrev").addEventListener("click",()=>{tutorialIndex=Math.max(0,tutorialIndex-1);updateGuide()});
 $("guideNext").addEventListener("click",()=>{tutorialIndex=tutorialIndex>=tutorialSteps.length?0:tutorialIndex+1;updateGuide()});
 $("guideCheck").addEventListener("click",()=>{
