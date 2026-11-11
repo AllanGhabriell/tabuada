@@ -461,6 +461,63 @@
   .mode-heading .select{width:min(270px,55%);cursor:pointer}
   .mode-explanation{font-size:12px;color:var(--muted);margin:9px 0 0;line-height:1.5}
   @media(max-width:420px){.mode-heading{align-items:stretch;flex-direction:column;gap:10px}.mode-heading .select{width:100%}}
+
+  /* Painel de configurações: compacto, organizado e responsivo */
+  .settings-modal{width:min(650px,calc(100vw - 28px));max-height:min(90dvh,850px);display:flex;flex-direction:column;background:var(--card);overflow:hidden;border-radius:22px}
+  .settings-modal .settings-header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:21px 24px 18px;border-bottom:1px solid var(--line)}
+  .settings-heading{display:flex;flex-direction:column;gap:4px}
+  .settings-heading b{font-size:21px;font-weight:780;letter-spacing:-.6px}
+  .settings-heading>span:last-child{font-size:12px;color:var(--muted)}
+  .settings-heading .eyebrow{color:var(--accent-strong)}
+  .settings-modal .x{width:36px;height:36px;padding:0;border-radius:11px;font-size:22px;flex:0 0 auto}
+  .settings-modal .settings-content{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:0;padding:0 24px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .settings-section{padding:21px 0 23px;border-bottom:1px solid var(--line)}
+  .settings-section-last{border-bottom:0}
+  .settings-section-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}
+  .settings-section-head h3{margin:0 0 4px;font-size:14px;font-weight:770;letter-spacing:-.1px}
+  .settings-section-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
+  .settings-toolbar{display:flex;gap:6px;flex:0 0 auto}
+  .settings-toolbar .small{padding:7px 11px;font-size:11px;border-radius:9px}
+  .number-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+  .number-option{display:flex;align-items:center;justify-content:center;position:relative;min-height:46px;border:1px solid var(--line);border-radius:11px;background:var(--surface-soft);cursor:pointer;user-select:none;transition:background .18s,border-color .18s,transform .18s,box-shadow .18s}
+  .number-option input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+  .number-option span{font-size:15px;font-weight:750;pointer-events:none}
+  .number-option:has(input:checked){background:rgba(120,116,237,.16);border-color:var(--accent);color:var(--accent-strong);box-shadow:inset 0 0 0 1px rgba(123,113,235,.12)}
+  .number-option:hover{transform:translateY(-2px);border-color:var(--accent);background:rgba(120,116,237,.12)}
+  .number-option:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+  .settings-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.65fr) minmax(0,.65fr);gap:10px;align-items:end}
+  .settings-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+  .settings-field>span{font-size:11px;font-weight:650;color:var(--muted)}
+  .settings-field .select{width:100%;height:43px;padding:9px 11px;border-radius:11px;font-size:12px;font-weight:650}
+  .settings-toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .setting-toggle{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);cursor:pointer;min-width:0}
+  .toggle-copy{display:flex;flex-direction:column;gap:3px}.toggle-copy b{font-size:12px;font-weight:750}.toggle-copy small{font-size:11px;color:var(--muted);line-height:1.3}
+  .setting-toggle>input{position:absolute;opacity:0;width:1px;height:1px}
+  .toggle-track{flex:0 0 auto;width:34px;height:21px;border-radius:30px;border:1px solid var(--line);background:rgba(130,140,160,.32);transition:background .2s;position:relative}
+  .toggle-track:before{content:"";position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .2s}
+  .setting-toggle:has(input:checked) .toggle-track{background:var(--accent);border-color:var(--accent)}
+  .setting-toggle:has(input:checked) .toggle-track:before{transform:translateX(13px)}
+  .setting-toggle:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+  .settings-footer{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px 24px;border-top:1px solid var(--line);background:var(--card)}
+  .settings-summary{display:flex;flex-direction:column;gap:2px;white-space:nowrap}
+  .settings-summary strong{font-size:15px;color:var(--text)}.settings-summary span{font-size:11px;color:var(--muted)}
+  .settings-footer-actions{display:flex;gap:8px}
+  .settings-footer-actions button{padding:11px 13px;font-size:12px;white-space:nowrap}
+  @media(max-width:560px){.settings-modal{width:calc(100vw - 18px);max-height:93dvh;border-radius:18px}
+    .settings-modal .settings-header{padding:15px 16px 13px}
+    .settings-heading b{font-size:19px}
+    .settings-modal .settings-content{padding:0 16px}
+    .settings-section{padding:17px 0 18px}
+    .number-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+    .number-option{min-height:43px}
+    .settings-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .settings-field-wide{grid-column:1/-1}
+    .settings-toggles{grid-template-columns:1fr}
+    .settings-footer{padding:12px 16px;align-items:stretch;flex-direction:column}
+    .settings-footer-actions button{flex:1}
+  }
+  @media(hover:none){.number-option:hover{transform:none}}
+  @media(prefers-reduced-motion:reduce){.number-option,.toggle-track,.toggle-track:before{transition:none}}
   </style>
 </head>
 
@@ -513,87 +570,48 @@
     </div>
   </div>
 
-  <!-- Options Modal -->
+  <!-- Configurações de treino -->
   <div class="overlay" id="overlayOptions" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
-      <header>
-        <div class="title">
-          <b>Ordem / Configurações</b>
-          <span>Personalize seu treino.</span>
-        </div>
-        <button class="x" data-close="overlayOptions">X</button>
+    <div class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <header class="settings-header">
+        <div class="settings-heading"><span class="eyebrow">PERSONALIZAÇÃO</span><b id="settingsTitle">Configurar treino</b><span>Escolha o que quer praticar.</span></div>
+        <button class="x" type="button" data-close="overlayOptions" aria-label="Fechar configurações">×</button>
       </header>
-
-      <div class="content">
-        <div class="row">
-          <div>
-            <label style="display:block; font-size:12px; color:rgba(233,238,252,.75); margin-bottom:6px;">Modo de tabuada</label>
-            <select class="select" id="modeSelect">
-              <option value="minimal">Sem contas repetidas</option>
-              <option value="conventional">Todas as combinações</option>
-            </select>
+      <div class="content settings-content">
+        <section class="settings-section">
+          <div class="settings-section-head">
+            <div><h3>Tabuadas</h3><p>Selecione quais números deseja treinar.</p></div>
+            <div class="settings-toolbar"><button class="small" type="button" id="btnAll">Todas</button><button class="small" type="button" id="btnNone">Limpar</button></div>
           </div>
-          
-        </div>
-
-        <div class="row">
-          <label class="chk" style="flex:1;">
-            <input type="checkbox" id="toggleTimer" />
-            <div>
-              <div style="font-weight:800;">Ligar cronômetro</div>
-              <div style="font-size:12px; color:rgba(233,238,252,.65);">Mostra o tempo da questão atual.</div>
-            </div>
-          </label>
-
-          <label class="chk" style="flex:1;">
-            <input type="checkbox" id="toggleAutoFocus" checked />
-            <div>
-              <div style="font-weight:800;">Focar no campo</div>
-              <div style="font-size:12px; color:rgba(233,238,252,.65);">Abre o teclado automaticamente.</div>
-            </div>
-          </label>
-        </div>
-
-        <div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <div>
-              <div style="font-weight:900; margin-bottom:4px;">Quais tabuadas treinar?</div>
-              <div style="font-size:12px; color:rgba(233,238,252,.65);">
-                Escolha os números que deseja praticar.
-              </div>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button class="small" id="btnAll">Todos</button>
-              <button class="small" id="btnNone">Nenhum</button>
-            </div>
+          <div class="number-grid" id="tablesGrid" role="group" aria-label="Tabuadas selecionadas"></div>
+        </section>
+        <section class="settings-section">
+          <div class="settings-section-head">
+            <div><h3>Ignorar fatores</h3><p>Exclui toda conta que envolva esses números.</p></div>
           </div>
-
-          <div class="grid" id="tablesGrid" style="margin-top:10px;"></div>
-        </div>
-
-        <div>
-          <div style="font-weight:900; margin-bottom:6px;">Números para ignorar</div>
-          <div style="font-size:12px; color:rgba(233,238,252,.65); margin-bottom:10px;">
-            As contas com esses números não aparecerão.
+          <div class="number-grid" id="excludeGrid" role="group" aria-label="Fatores excluídos"></div>
+        </section>
+        <section class="settings-section">
+          <div class="settings-section-head"><div><h3>Como gerar as contas</h3><p>Defina a ordem dos fatores e o intervalo.</p></div></div>
+          <div class="settings-fields">
+            <label class="settings-field settings-field-wide"><span>Combinações</span>
+              <select class="select" id="modeSelect"><option value="minimal">Sem contas equivalentes</option><option value="conventional">Todas as combinações</option></select>
+            </label>
+            <label class="settings-field"><span>De</span><input class="select" id="minMul" type="number" min="0" max="20" value="1"/></label>
+            <label class="settings-field"><span>Até</span><input class="select" id="maxMul" type="number" min="0" max="20" value="10"/></label>
           </div>
-          <div class="grid" id="excludeGrid"></div>
-        </div>
-
-        <div>
-          <div style="font-weight:900; margin-bottom:6px;">Intervalo dos multiplicadores</div>
-          <div style="display:flex; gap:10px;">
-            <input class="select" id="minMul" type="number" min="0" max="20" value="1" />
-            <input class="select" id="maxMul" type="number" min="0" max="20" value="10" />
+        </section>
+        <section class="settings-section settings-section-last">
+          <div class="settings-section-head"><div><h3>Preferências</h3></div></div>
+          <div class="settings-toggles">
+            <label class="setting-toggle"><span class="toggle-copy"><b>Mostrar cronômetro</b><small>Tempo da questão atual</small></span><input type="checkbox" id="toggleTimer"/><span class="toggle-track" aria-hidden="true"></span></label>
+            <label class="setting-toggle"><span class="toggle-copy"><b>Foco automático</b><small>Selecionar o campo de resposta</small></span><input type="checkbox" id="toggleAutoFocus"/><span class="toggle-track" aria-hidden="true"></span></label>
           </div>
-          <div style="font-size:12px; color:rgba(233,238,252,.65); margin-top:8px;">
-            Defina os valores mínimo e máximo.
-          </div>
-        </div>
+        </section>
       </div>
-
-      <div class="footerbtns">
-        <button class="danger" id="btnHardReset" style="flex:1;">Restaurar padrões</button>
-        <button class="primary" id="btnApply" style="flex:1;">Aplicar e começar</button>
+      <div class="settings-footer">
+        <div class="settings-summary"><strong id="settingsCount">0 contas</strong><span id="settingsCountHint">no seu próximo ciclo</span></div>
+        <div class="settings-footer-actions"><button type="button" id="btnHardReset">Restaurar</button><button class="primary" type="button" id="btnApply">Salvar configurações</button></div>
       </div>
     </div>
   </div>
@@ -901,14 +919,24 @@
       for(const [id,prefix,chosen] of [["tablesGrid","t",cfg.tables],["excludeGrid","e",cfg.excludeFactors]]){
         const parent=$(id);parent.replaceChildren();
         for(const n of nums){
-          const label=document.createElement("label");label.className="chk";
+          const label=document.createElement("label");label.className="number-option";
           const input=document.createElement("input");input.type="checkbox";input.id=prefix+"_"+n;input.checked=chosen.includes(n);
-          const txt=document.createElement("b");txt.textContent=String(n);label.append(input,txt);parent.appendChild(label);
+          const txt=document.createElement("span");txt.textContent=String(n);label.append(input,txt);parent.appendChild(label);
         }
       }
       $("modeSelect").value=cfg.mode;$("toggleTimer").checked=cfg.timer;$("toggleAutoFocus").checked=cfg.autoFocus;
       $("minMul").value=cfg.minMul;$("maxMul").value=cfg.maxMul;
+      updateSettingsPreview();
     }
+    function updateSettingsPreview(){
+      const selected=[],excluded=[];
+      for(let i=0;i<=12;i++){if($("t_"+i)?.checked)selected.push(i);if($("e_"+i)?.checked)excluded.push(i)}
+      const temp=validConfig({...cfg,tables:selected,excludeFactors:excluded,mode:$("modeSelect").value,minMul:$("minMul").value,maxMul:$("maxMul").value});
+      const count=selected.length?problems(temp).length:0;
+      $("settingsCount").textContent=count+" "+(count===1?"conta":"contas");
+      $("settingsCountHint").textContent=count?"no próximo ciclo":"ajuste a seleção";
+    }
+    $("overlayOptions").addEventListener("change",updateSettingsPreview);
     function applyOptions(){
       const tables=[],exclude=[];
       for(let i=0;i<=12;i++){if($("t_"+i).checked)tables.push(i);if($("e_"+i).checked)exclude.push(i)}
@@ -938,8 +966,8 @@
     });
     $("btnOptions").addEventListener("click",()=>{buildGrids();show($("overlayOptions"))});
     $("btnApply").addEventListener("click",applyOptions);
-    $("btnAll").addEventListener("click",()=>{for(let i=0;i<=12;i++)$("t_"+i).checked=true});
-    $("btnNone").addEventListener("click",()=>{for(let i=0;i<=12;i++)$("t_"+i).checked=false});
+    $("btnAll").addEventListener("click",()=>{for(let i=0;i<=12;i++)$("t_"+i).checked=true;updateSettingsPreview()});
+    $("btnNone").addEventListener("click",()=>{for(let i=0;i<=12;i++)$("t_"+i).checked=false;updateSettingsPreview()});
     $("btnReset").addEventListener("click",()=>{if(!state.finished&&state.attempts>0&&!confirm("Recomeçar este ciclo? O progresso atual será perdido."))return;resetCycle()});
     $("btnHardReset").addEventListener("click",()=>{
       if(!confirm("Restaurar as configurações padrão e iniciar outro ciclo? O histórico de ciclos concluídos será preservado."))return;
