@@ -166,7 +166,7 @@ function toSup(n){return String(n).replace(/\d/g,x=>"⁰¹²³⁴⁵⁶⁷⁸⁹
 function startCycle(){
 if(nextTimeout)clearTimeout(nextTimeout);
 const items=generate(cfg);
-if(!items.length){notify("Essa seleção não gerou contas. Ajuste as configurações.");openSettings();return false}
+if(!items.length){notify("Essa seleção não gerou contas. Ajuste as configurações.");return false}
 cycle={id:Date.now(),cfg:clone(cfg),items,answered:0,correct:0,wrong:0,skips:0,totalMs:0,created:new Date().toISOString(),last:null,complete:false};
 current=null;persist();return true;
 }
@@ -201,12 +201,12 @@ if(cycle&&!cycle.complete&&cycle.answered>0&&cycle.cfg.operation!==id){
 if(!confirm("Iniciar outro módulo? O ciclo atual ainda não foi concluído."))return;
 }
 cfg.operation=id;if(!M[id].some(x=>x.id===cfg.method))cfg.method="free";
-if(!cycle||cycle.complete||cycle.cfg.operation!==id)startCycle();
+if(!cycle||cycle.complete||cycle.cfg.operation!==id){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 persist();showPage("workspace");
 }
 function options(select,items,key){select.replaceChildren();for(const x of items){const o=document.createElement("option");o.value=x.id;o.textContent=x.name;select.append(o)}select.value=key}
 function renderWorkspace(){
-if(!cycle||cycle.cfg.operation!==cfg.operation)startCycle();
+if(!cycle||cycle.cfg.operation!==cfg.operation){if(!startCycle()){createSettings();openModal("settingsModal");return}}
 options($("modeSelect"),modes,cfg.mode);
 options($("methodSelect"),M[cfg.operation],cfg.method);
 $("moduleTitle").textContent=op().name;$("methodNote").textContent=cfg.method==="free"?"Resolva pelo seu próprio caminho.":method().guide[0];
@@ -308,12 +308,12 @@ renderProgress();
 function changeMode(mode){
 if(cfg.mode===mode)return;
 if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Trocar o modo inicia um novo ciclo. Continuar?")){$("modeSelect").value=cfg.mode;return}
-cfg.mode=mode;startCycle();renderWorkspace();
+cfg.mode=mode;if(!startCycle()){createSettings();openModal("settingsModal");return}renderWorkspace();
 }
 function changeMethod(id){
 if(cfg.method===id)return;
 if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Trocar a metodologia inicia um novo ciclo. Continuar?")){$("methodSelect").value=cfg.method;return}
-cfg.method=id;startCycle();renderWorkspace();
+cfg.method=id;if(!startCycle()){createSettings();openModal("settingsModal");return}renderWorkspace();
 }
 function displayGuide(){
 const m=method(),el=$("guideSteps");el.replaceChildren();
@@ -351,7 +351,7 @@ if((cfg.operation==="mul"||cfg.operation==="div")&&!next.tables.length){notify("
 const changed=JSON.stringify({...cfg,showTimer:false,autofocus:false})!==JSON.stringify({...next,showTimer:false,autofocus:false});
 if(changed&&cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Essas alterações iniciam outro ciclo. Continuar?"))return;
 cfg=next;
-if(changed&&!startCycle())return;
+if(changed&&!startCycle()){createSettings();return}
 persist();closeModal("settingsModal");renderWorkspace();
 }
 function review(){
@@ -382,7 +382,7 @@ addEventListener("pointermove",e=>{tx=e.clientX;ty=e.clientY;if(!r)r=requestAnim
 }
 $("btnBack").addEventListener("click",()=>showPage("home"));
 $("btnSettings").addEventListener("click",()=>{createSettings();openModal("settingsModal")});
-$("btnReset").addEventListener("click",()=>{if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Recomeçar o ciclo atual?"))return;startCycle();renderWorkspace()});
+$("btnReset").addEventListener("click",()=>{if(cycle&&!cycle.complete&&cycle.answered>0&&!confirm("Recomeçar o ciclo atual?"))return;if(startCycle())renderWorkspace()});
 $("methodSelect").addEventListener("change",e=>changeMethod(e.target.value));
 $("modeSelect").addEventListener("change",e=>changeMode(e.target.value));
 $("methodHelp").addEventListener("click",displayGuide);
@@ -393,7 +393,7 @@ $("btnReview").addEventListener("click",review);
 $("saveSettings").addEventListener("click",applySettings);
 $("allTables").addEventListener("click",()=>document.querySelectorAll('input[data-group="t"]').forEach(x=>x.checked=true));
 $("noTables").addEventListener("click",()=>document.querySelectorAll('input[data-group="t"]').forEach(x=>x.checked=false));
-$("restoreSettings").addEventListener("click",()=>{const selected=cfg.operation;cfg=normalize({...defaultCfg,operation:selected});createSettings()});
+$("restoreSettings").addEventListener("click",()=>{const selected=cfg.operation;const backup=cfg;cfg=normalize({...defaultCfg,operation:selected});createSettings();cfg=backup});
 $("historyButton").addEventListener("click",historyView);
 $("exportButton").addEventListener("click",()=>{
 const blob=new Blob([JSON.stringify({version:1,cfg,cycle,history},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="calculo-mental.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
