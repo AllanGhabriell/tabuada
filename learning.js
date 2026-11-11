@@ -311,6 +311,7 @@ const percentage=n?Math.round(done*100/n):0;
 $("progressText").textContent=done+" de "+n;
 $("progressRemaining").textContent=(n-done)+" restantes";
 $("progressPercent").textContent=percentage+"%";
+$("compactProgress").textContent=percentage+"%";
 $("progressFill").style.width=percentage+"%";
 $("progressTrack").setAttribute("aria-valuenow",percentage);
 $("statCorrect").textContent=cycle.correct;
