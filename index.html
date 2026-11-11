@@ -411,6 +411,47 @@
     @media(max-width:360px){.theme-toggle span{display:none}.title b{font-size:15px}.btnrow button{padding:8px}}
     @media(hover:none),(pointer:coarse){.ambient-glow{display:none}button:hover:not(:disabled),.chk:hover{transform:none;box-shadow:none}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}.ambient-glow{display:none}}
+
+  /* Ciclos, feedback, histórico e cronômetro */
+  .progress-panel{padding:19px 20px;background:var(--surface-soft);border:1px solid var(--line);border-radius:19px}
+  .progress-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .progress-heading h2{font-size:17px;letter-spacing:-.4px;margin:5px 0 0;font-weight:750}
+  .progress-heading>strong{font-size:22px;font-variant-numeric:tabular-nums;color:var(--accent-strong)}
+  .eyebrow{font-size:10px;letter-spacing:1.9px;color:var(--muted);font-weight:800}
+  .progress-track{height:10px;border-radius:99px;overflow:hidden;background:rgba(125,126,174,.18)}
+  #progressFill{width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#686ce7,#a38bef);transition:width .4s ease}
+  .progress-notes{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:11px}
+  .progress-notes b{color:var(--text)}
+  .training-card{position:relative;min-height:335px;gap:19px;padding:22px}
+  .question-top{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .stopwatch{font-size:13px;font-weight:780;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px 13px;background:var(--surface-soft);font-variant-numeric:tabular-nums}
+  .timer-ring{color:var(--accent-strong);font-size:19px;line-height:1}
+  .training-card .q{font-size:clamp(44px,9vw,72px);margin:12px 0 1px}
+  .answer-form{width:min(370px,100%);display:flex;flex-direction:column;gap:12px}
+  .answer-form>input{width:100%;font-size:22px;padding:17px 12px}
+  .action-row{display:flex;gap:10px;width:100%}
+  .action-row button:first-child{flex:1;padding:13px}
+  .action-row button:last-child{min-width:95px}
+  .feedback{width:min(420px,100%);min-height:48px;line-height:1.4}
+  .feedback[data-kind="good"]{color:var(--good);background:rgba(54,176,123,.075);border-color:rgba(54,176,123,.25)}
+  .feedback[data-kind="bad"]{color:var(--bad);background:rgba(214,72,89,.075);border-color:rgba(214,72,89,.24)}
+  .feedback[data-kind="warn"]{color:var(--warn);background:rgba(195,151,52,.075);border-color:rgba(195,151,52,.24)}
+  .bottom-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .bottom-actions span{font-size:11px;color:var(--muted)}
+  .result-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+  .result-grid>div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:5px;background:var(--surface-soft);border:1px solid var(--line);border-radius:15px;padding:14px 5px}
+  .result-grid b{font-size:22px;font-variant-numeric:tabular-nums}
+  .result-grid span{font-size:11px;color:var(--muted)}
+  .summary-card{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:12px 14px;border-radius:13px;background:var(--surface-soft);border:1px solid var(--line)}
+  .summary-card span{font-size:12px;color:var(--muted)}
+  .summary-card b{font-size:13px;text-align:right}
+  .history-entries{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow:auto}
+  .history-entry{display:flex;flex-direction:column;gap:5px;border-radius:13px;padding:12px;background:var(--surface-soft);border:1px solid var(--line)}
+  .history-entry b{font-size:13px}.history-entry span,.muted{font-size:12px;color:var(--muted)}
+  .section-title{font-size:14px;margin:0}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  @media(max-width:520px){.progress-panel{padding:14px}.training-card{padding:15px;min-height:320px}.result-grid{grid-template-columns:repeat(2,1fr)}.bottom-actions{justify-content:center}.progress-heading h2{font-size:15px}.btnrow{flex-wrap:wrap}}
   </style>
 </head>
 
@@ -426,36 +467,29 @@
         <div class="btnrow">
           <button class="small theme-toggle" id="btnTheme" type="button" aria-label="Ativar tema claro" title="Alternar tema">☀ <span>Claro</span></button>
           <button class="small primary" id="btnOptions">⚙ Configurar</button>
-          <button class="small danger" id="btnReset">Reset</button>
+          <button class="small" id="btnHistory">Histórico</button>
+          <button class="small danger" id="btnReset">Recomeçar</button>
         </div>
       </header>
 
-      <main>
-        <div class="stats">
-          <div class="pill"><span class="dot good"></span> Masterizadas: <b id="sMaster">0</b></div>
-          <div class="pill"><span class="dot warn"></span> Ativas: <b id="sActive">0</b></div>
-          <div class="pill"><span class="dot bad"></span> Erros: <b id="sWrong">0</b></div>
-          <div class="pill" id="timerPill" style="display:none;"><span class="dot"></span> ⏱ <b id="sTimer">0.0s</b></div>
-        </div>
-
-        <div class="card">
-          <div class="q" id="question">— × — = ?<small id="qMeta"></small></div>
-
-          <div class="answer">
-            <input id="answer" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Digite a resposta" />
-          </div>
-
-          <div class="feedback" id="feedback">Digite e pressione Enter.</div>
-
-          <div class="hint" id="hint">
-            Treine com calma. Cada resposta é mais um passo.
-          </div>
-
-          <div style="display:flex; gap:10px; width:min(340px,90%);">
-            <button class="primary" id="btnSubmit" style="flex:1;">Responder</button>
-            <button id="btnSkip" class="small" style="flex:0 0 auto;">Pular</button>
-          </div>
-        </div>
+<main>
+        <section class="progress-panel" aria-label="Progresso do ciclo">
+          <div class="progress-heading"><div><span class="eyebrow">CICLO ATUAL</span><h2 id="progressTitle">Seu progresso</h2></div><strong id="progressPct">0%</strong></div>
+          <div class="progress-track" role="progressbar" aria-label="Multiplicações dominadas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div id="progressFill"></div></div>
+          <div class="progress-notes"><span><b id="sMaster">0</b> dominadas</span><span><b id="sActive">0</b> restantes</span><span><b id="sWrong">0</b> erros</span></div>
+        </section>
+        <section class="card training-card" aria-label="Treinamento">
+          <div class="question-top"><span class="eyebrow" id="qMeta">MULTIPLICAÇÃO</span><div class="stopwatch" id="timerPill"><span class="timer-ring">◷</span><span id="sTimer">0,0s</span></div></div>
+          <div class="q" id="question">— × — = ?</div>
+          <form id="answerForm" class="answer-form" autocomplete="off">
+            <label for="answer" class="sr-only">Sua resposta</label>
+            <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Sua resposta" />
+            <div class="action-row"><button class="primary" id="btnSubmit" type="submit">Responder <span aria-hidden="true">↗</span></button><button id="btnSkip" type="button">Pular</button></div>
+          </form>
+          <div class="feedback" id="feedback" role="status" aria-live="polite">Pronto para começar? Digite a resposta.</div>
+          <div class="hint" id="hint">Responda no seu ritmo. Cada conta dominada aproxima você da conclusão.</div>
+        </section>
+        <div class="bottom-actions"><button class="small" id="btnReview" type="button">↻ Revisar dificuldades</button><span id="sessionStatus">Seu progresso é salvo automaticamente.</span></div>
       </main>
     </div>
   </div>
@@ -480,13 +514,7 @@
               <option value="conventional">Todas as combinações</option>
             </select>
           </div>
-          <div class="tight" style="min-width:160px;">
-            <label style="display:block; font-size:12px; color:rgba(233,238,252,.75); margin-bottom:6px;">Sessão</label>
-            <select class="select" id="sessionSelect">
-              <option value="finish">Concluir treino</option>
-              <option value="loop">Treino contínuo</option>
-            </select>
-          </div>
+          
         </div>
 
         <div class="row">
@@ -546,552 +574,346 @@
 
       <div class="footerbtns">
         <button class="danger" id="btnHardReset" style="flex:1;">Restaurar padrões</button>
-        <button class="primary" id="btnApply" style="flex:1;">Aplicar</button>
+        <button class="primary" id="btnApply" style="flex:1;">Aplicar e começar</button>
       </div>
     </div>
   </div>
 
-  <!-- Finish Modal -->
+  <!-- Conclusão e histórico -->
   <div class="overlay" id="overlayFinish" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
-      <header>
-        <div class="title">
-          <b>Você concluiu 🎉</b>
-          <span>Todas as contas dessa sessão foram masterizadas.</span>
-        </div>
-        <button class="x" data-close="overlayFinish">X</button>
-      </header>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="finishHeading">
+      <header><div class="title"><b id="finishHeading">Ciclo concluído! 🎉</b><span>Você chegou ao final do treinamento.</span></div><button class="x" data-close="overlayFinish" aria-label="Fechar">×</button></header>
       <div class="content">
-        <div class="pill"><span class="dot good"></span> Masterizadas: <b id="fMaster">0</b></div>
-        <div class="pill"><span class="dot bad"></span> Erros totais: <b id="fWrong">0</b></div>
-        <div class="pill"><span class="dot"></span> Tentativas: <b id="fAttempts">0</b></div>
-        <div style="font-size:13px; color:rgba(233,238,252,.75); line-height:1.45;">
-          Quer fazer tudo de novo? Use <b>Reset</b> ou mude a ordem/tabuadas em <b>Ordem</b>.
-        </div>
+        <div class="result-grid"><div><b id="fMaster">0</b><span>Dominadas</span></div><div><b id="fWrong">0</b><span>Erros</span></div><div><b id="fAttempts">0</b><span>Tentativas</span></div><div><b id="fAccuracy">0%</b><span>Precisão</span></div></div>
+        <div class="summary-card"><span>Tempo médio por resposta</span><b id="fAverage">—</b></div>
+        <div class="summary-card"><span>Comparação com seu ciclo anterior</span><b id="fCompare">Primeiro ciclo</b></div>
+        <div class="summary-card"><span>Contas que exigiram mais treino</span><b id="fHard">—</b></div>
       </div>
-      <div class="footerbtns">
-        <button class="danger" id="btnFinishReset" style="flex:1;">Treinar novamente</button>
-        <button class="primary" data-close="overlayFinish" style="flex:1;">Voltar</button>
+      <div class="footerbtns"><button id="btnFinishReview">Revisar dificuldades</button><button class="primary" id="btnFinishReset">Novo ciclo</button></div>
+    </div>
+  </div>
+  <div class="overlay" id="overlayHistory" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
+      <header><div class="title"><b id="historyHeading">Sua evolução</b><span>Ciclos concluídos neste navegador</span></div><button class="x" data-close="overlayHistory" aria-label="Fechar">×</button></header>
+      <div class="content">
+        <div class="result-grid"><div><b id="hCycles">0</b><span>Ciclos</span></div><div><b id="hToday">0</b><span>Hoje</span></div><div><b id="hAccuracy">—</b><span>Precisão média</span></div><div><b id="hDom">0</b><span>Contas dominadas</span></div></div>
+        <h3 class="section-title">Últimos ciclos</h3><div id="historyEntries" class="history-entries"></div>
+        <div class="footerbtns" style="padding:0"><button id="btnExport">Exportar dados</button><button id="btnImport">Importar dados</button><input id="importFile" type="file" accept="application/json,.json" hidden /></div>
       </div>
+      <div class="footerbtns"><button class="primary" data-close="overlayHistory">Fechar</button></div>
     </div>
   </div>
 
   <script>
+  (() => {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const clamp = (n,lo,hi) => Math.max(lo,Math.min(hi,n));
+    const SETTINGS_KEY="tabuada_trainer_v1", DATA_KEY="tabuada_progress_v2", THEME_KEY="tabuada_theme";
+    const defaults={mode:"minimal",session:"finish",timer:false,autoFocus:true,tables:[3,4,6,7,8,9],excludeFactors:[1,10],minMul:1,maxMul:10};
+    const safeParse=(s,fallback)=>{try{return s?JSON.parse(s):fallback}catch{return fallback}};
+    const read=(key)=>{try{return localStorage.getItem(key)}catch{return null}};
+    const write=(key,v)=>{try{localStorage.setItem(key,JSON.stringify(v));return true}catch{return false}};
+    function validConfig(c){
+      const o={...defaults,...(c&&typeof c==="object"?c:{})};
+      o.tables=Array.isArray(o.tables)?[...new Set(o.tables.map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<=12))]:defaults.tables.slice();
+      o.excludeFactors=Array.isArray(o.excludeFactors)?[...new Set(o.excludeFactors.map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<=20))]:defaults.excludeFactors.slice();
+      o.minMul=clamp(Number.isFinite(Number(o.minMul))?Math.trunc(Number(o.minMul)):1,0,20);
+      o.maxMul=clamp(Number.isFinite(Number(o.maxMul))?Math.trunc(Number(o.maxMul)):10,0,20);
+      o.mode=o.mode==="conventional"?"conventional":"minimal";
+      o.session="finish";o.timer=!!o.timer;o.autoFocus=!!o.autoFocus;
+      return o;
+    }
+    let cfg=validConfig(safeParse(read(SETTINGS_KEY),defaults));
+    let db=safeParse(read(DATA_KEY),{active:null,history:[]});
+    if(!db||typeof db!=="object")db={active:null,history:[]};
+    if(!Array.isArray(db.history))db.history=[];
+    let state=null, current=null, qStart=0, pausedElapsed=0, answerLocked=false, feedbackTimeout=null, renderCounter=0, lastKey=null;
+    let reviewPool=null;
 
-    // Preferência visual e efeito de iluminação do cursor
-    const THEME_KEY = "tabuada_theme";
-    const root = document.documentElement;
-    const themeButton = document.getElementById("btnTheme");
+    // Aparência: persistência independente dos dados de treino.
+    const themeButton=$("btnTheme");
     function setTheme(theme){
-      const chosen = theme === "light" ? "light" : "dark";
-      root.dataset.theme = chosen;
-      themeButton.innerHTML = chosen === "dark" ? '☀ <span>Claro</span>' : '☾ <span>Escuro</span>';
-      themeButton.setAttribute("aria-label",chosen === "dark" ? "Ativar tema claro" : "Ativar tema escuro");
-      themeButton.title = themeButton.getAttribute("aria-label");
-      try{localStorage.setItem(THEME_KEY,chosen)}catch(e){}
+      const chosen=theme==="light"?"light":"dark";
+      document.documentElement.dataset.theme=chosen;
+      themeButton.innerHTML=chosen==="dark"?'☀ <span>Claro</span>':'☾ <span>Escuro</span>';
+      themeButton.setAttribute("aria-label",chosen==="dark"?"Ativar tema claro":"Ativar tema escuro");
+      try{localStorage.setItem(THEME_KEY,chosen)}catch{}
     }
-    let savedTheme = null;
-    try{savedTheme=localStorage.getItem(THEME_KEY)}catch(e){}
-    setTheme(savedTheme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
-    themeButton.addEventListener("click",()=>setTheme(root.dataset.theme === "dark" ? "light" : "dark"));
-
-    const glow = document.getElementById("ambientGlow");
-    const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
-    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-    if(finePointer.matches && !reduceMotion.matches){
-      let x=innerWidth/2,y=innerHeight*.4,targetX=x,targetY=y,frame=0;
-      function animateGlow(){
-        x+=(targetX-x)*.115; y+=(targetY-y)*.115;
-        glow.style.transform='translate3d('+(x-225)+'px,'+(y-225)+'px,0)';
-        if(Math.abs(targetX-x)+Math.abs(targetY-y)>.35) frame=requestAnimationFrame(animateGlow);
-        else frame=0;
-      }
-      window.addEventListener("pointermove",e=>{
-        targetX=e.clientX;targetY=e.clientY;
-        if(!frame) frame=requestAnimationFrame(animateGlow);
-      },{passive:true});
+    setTheme(read(THEME_KEY)||(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark"));
+    themeButton.addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
+    const glow=$("ambientGlow");
+    if(matchMedia("(hover:hover) and (pointer:fine)").matches&&!matchMedia("(prefers-reduced-motion:reduce)").matches){
+      let x=innerWidth/2,y=innerHeight*.4,tx=x,ty=y,frame=0;
+      const animate=()=>{x+=(tx-x)*.115;y+=(ty-y)*.115;glow.style.transform="translate3d("+(x-225)+"px,"+(y-225)+"px,0)";frame=Math.abs(tx-x)+Math.abs(ty-y)>.35?requestAnimationFrame(animate):0};
+      addEventListener("pointermove",e=>{tx=e.clientX;ty=e.clientY;if(!frame)frame=requestAnimationFrame(animate)},{passive:true});
     }
-
-    // ========= Util =========
-    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-    const now = () => performance.now();
-
-    // ========= Config padrão =========
-    const DEFAULTS = {
-      mode: "minimal",            // minimal | conventional
-      session: "finish",          // finish | loop
-      timer: false,
-      autoFocus: true,
-      tables: [3,4,6,7,8,9],      // parecido com o “corte” da imagem
-      excludeFactors: [1,10],     // “óbvios” por padrão
-      minMul: 1,
-      maxMul: 10
-    };
-
-    const LS_KEY = "tabuada_trainer_v1";
-
-    function loadCfg(){
-      try{
-        const raw = localStorage.getItem(LS_KEY);
-        if(!raw) return structuredClone(DEFAULTS);
-        const cfg = JSON.parse(raw);
-        return { ...structuredClone(DEFAULTS), ...cfg };
-      }catch{
-        return structuredClone(DEFAULTS);
+    function problems(config){
+      const nums=[];const low=Math.min(config.minMul,config.maxMul),high=Math.max(config.minMul,config.maxMul);
+      const excludes=new Set(config.excludeFactors),selected=new Set(config.tables),seen=new Set();
+      for(const a of config.tables)for(let b=low;b<=high;b++){
+        if(excludes.has(a)||excludes.has(b))continue;
+        const key=config.mode==="minimal"?[Math.min(a,b),Math.max(a,b)].join("x"):a+"x"+b;
+        if(seen.has(key))continue;seen.add(key);nums.push({key,a,b,weight:1,attempts:0,wrong:0,streak:0,good:0,mastered:false,totalMs:0,solved:0});
       }
+      return nums;
     }
-    function saveCfg(cfg){
-      localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+    function newState(config,list=problems(config),type="normal"){
+      return {id:Date.now()+"-"+Math.random().toString(36).slice(2,8),type,createdAt:new Date().toISOString(),cfg:structuredClone(config),items:list,wrong:0,attempts:0,skipped:0,correct:0,totalMs:0,lastQuestion:null,finished:false};
     }
-
-    // ========= Estado de treino =========
-    // Cada item: {a,b, ans, w, wrong, attempts, mastered, lastRT}
-    let cfg = loadCfg();
-    let items = [];
-    let current = null;
-    let qStart = 0;
-
-    let totalWrong = 0;
-    let totalAttempts = 0;
-
-    // ========= UI =========
-    const $ = (id) => document.getElementById(id);
-
-    const elSubtitle = $("subtitle");
-    const elQuestion = $("question");
-    const elQMeta = $("qMeta");
-    const elAnswer = $("answer");
-    const elFeedback = $("feedback");
-    const elHint = $("hint");
-
-    const sMaster = $("sMaster");
-    const sActive = $("sActive");
-    const sWrong = $("sWrong");
-    const sTimer = $("sTimer");
-    const timerPill = $("timerPill");
-
-    const overlayOptions = $("overlayOptions");
-    const overlayFinish = $("overlayFinish");
-
-    // Options controls
-    const modeSelect = $("modeSelect");
-    const sessionSelect = $("sessionSelect");
-    const toggleTimer = $("toggleTimer");
-    const toggleAutoFocus = $("toggleAutoFocus");
-    const tablesGrid = $("tablesGrid");
-    const excludeGrid = $("excludeGrid");
-    const minMul = $("minMul");
-    const maxMul = $("maxMul");
-
-    // Finish stats
-    const fMaster = $("fMaster");
-    const fWrong = $("fWrong");
-    const fAttempts = $("fAttempts");
-
-    // ========= Geração das contas =========
-    function buildProblems(){
-      const minM = clamp(parseInt(cfg.minMul,10) || 1, 0, 20);
-      const maxM = clamp(parseInt(cfg.maxMul,10) || 10, 0, 20);
-      const low = Math.min(minM, maxM);
-      const high = Math.max(minM, maxM);
-
-      const tables = [...new Set(cfg.tables)].sort((a,b)=>a-b);
-      const exclude = new Set(cfg.excludeFactors || []);
-
-      const probs = [];
-
-      if(cfg.mode === "conventional"){
-        // Para cada tabuada escolhida: a × b, b no intervalo
-        for(const a of tables){
-          for(let b = low; b <= high; b++){
-            if(exclude.has(a) || exclude.has(b)) continue;
-            probs.push([a,b]);
-          }
-        }
-      } else {
-        // Minimalista: evita repetição (a×b = b×a)
-        // Estratégia: gera pares (a,b) onde a está em tables e b também pode estar em tables
-        // e b no intervalo [low,high] se estiver lá; se não, permite b no intervalo
-        // mas aplica regra a<=b quando b também é tabuada selecionada.
-        const tableSet = new Set(tables);
-
-        for(const a of tables){
-          for(let b = low; b <= high; b++){
-            if(exclude.has(a) || exclude.has(b)) continue;
-
-            // evita duplicata comutativa quando ambos são "fatores principais" (tabuadas marcadas)
-            if(tableSet.has(b)){
-              if(a > b) continue; // mantém apenas a<=b
-            }
-
-            // (opcional) também remove "exceções" bem óbvias quando o usuário excluiu
-            probs.push([a,b]);
-          }
-        }
+    function normalizeState(s){
+      if(!s||typeof s!=="object"||!Array.isArray(s.items)||s.items.length>500||!s.items.length)return null;
+      const v=validConfig(s.cfg);
+      const keys=new Set(problems(v).map(i=>i.key));
+      if(s.type!=="review"&&s.items.some(i=>!i||!keys.has(i.key)))return null;
+      if(s.items.some(i=>!i||!Number.isFinite(i.a)||!Number.isFinite(i.b)))return null;
+      s.cfg=v;
+      for(const i of s.items){
+        i.weight=clamp(Number(i.weight)||1,.2,25);i.attempts=Math.max(0,Number(i.attempts)||0);
+        i.wrong=Math.max(0,Number(i.wrong)||0);i.good=Math.max(0,Number(i.good)||0);
+        i.streak=Math.max(0,Number(i.streak)||0);i.mastered=!!i.mastered;
+        i.totalMs=Math.max(0,Number(i.totalMs)||0);i.solved=Math.max(0,Number(i.solved)||0);
       }
-
-      // Normaliza: remove duplicatas exatas
-      const seen = new Set();
-      const unique = [];
-      for(const [a,b] of probs){
-        const k = `${a}x${b}`;
-        if(seen.has(k)) continue;
-        seen.add(k);
-        unique.push([a,b]);
-      }
-      return unique;
+      for(const k of ["attempts","wrong","skipped","correct","totalMs"])s[k]=Math.max(0,Number(s[k])||0);
+      return s;
     }
-
-    function initItems(resetStats=false){
-      const probs = buildProblems();
-
-      items = probs.map(([a,b]) => ({
-        a, b,
-        ans: a*b,
-        w: 1.0,             // peso base (frequência)
-        wrong: 0,
-        attempts: 0,
-        mastered: false,
-        lastRT: null
-      }));
-
-      if(resetStats){
-        totalWrong = 0;
-        totalAttempts = 0;
-      }
-
-      current = null;
-      qStart = 0;
-      updateHeaderSubtitle();
-      updateStats();
-      nextQuestion(true);
+    state=normalizeState(db.active);
+    if(state){cfg=validConfig(state.cfg);write(SETTINGS_KEY,cfg)}
+    else state=newState(cfg);
+    function persist(){db.active=state;write(DATA_KEY,db)}
+    const active=()=>state.items.filter(i=>!i.mastered);
+    const countDone=()=>state.items.length-active().length;
+    const score=i=>i.wrong*2+i.attempts-i.good+Math.max(0,i.totalMs/Math.max(i.solved,1)/5500);
+    function chooseNext(){
+      const choices=active();if(!choices.length)return null;
+      const pool=choices.length>1?choices.filter(i=>i.key!==state.lastQuestion):choices;
+      const weights=pool.map(i=>Math.max(.2,Number(i.weight)||1));
+      let r=Math.random()*weights.reduce((a,b)=>a+b,0);
+      for(let k=0;k<pool.length;k++){r-=weights[k];if(r<=0)return pool[k]}
+      return pool[pool.length-1];
     }
-
-    // ========= Seleção dinâmica (weighted random) =========
-    function pickNext(){
-      const active = items.filter(it => !it.mastered || cfg.session === "loop");
-      if(active.length === 0) return null;
-
-      // Em loop, mesmo masterizada pode voltar, mas com peso baixo
-      let total = 0;
-      for(const it of active){
-        const w = (cfg.session === "loop")
-          ? Math.max(0.10, it.w * (it.mastered ? 0.15 : 1.0))
-          : Math.max(0, it.w);
-        total += w;
-      }
-      if(total <= 0) return null;
-
-      let r = Math.random() * total;
-      for(const it of active){
-        const w = (cfg.session === "loop")
-          ? Math.max(0.10, it.w * (it.mastered ? 0.15 : 1.0))
-          : Math.max(0, it.w);
-        r -= w;
-        if(r <= 0) return it;
-      }
-      return active[active.length-1];
+    function duration(){return current?pausedElapsed+Math.max(0,performance.now()-qStart):0}
+    function setFeedback(message,type="neutral"){
+      const el=$("feedback");el.textContent=message;el.dataset.kind=type;
     }
-
-    // ========= Regras de reforço =========
-    // - erro: aumenta muito o peso
-    // - acerto rápido: masteriza (só em finish) e zera peso
-    // - acerto lento: diminui peso (aparece menos), mas não masteriza imediatamente
-    function applyResult(it, correct, rtMs){
-      it.attempts++;
-      it.lastRT = rtMs;
-      totalAttempts++;
-
-      // thresholds (ajustáveis)
-      const FAST_MS = 1800;      // <1.8s = rápido
-      const SLOW_MS = 6500;      // >6.5s = lento
-
-      if(!correct){
-        it.wrong++;
-        totalWrong++;
-
-        // aumenta bem a frequência
-        it.w = Math.min(25, it.w * 2.4 + 1.2);
-
-        // nunca masteriza em erro
-        it.mastered = false;
-        return { tag: "bad", msg: `Errou: ${it.a} × ${it.b} = ${it.ans}` };
-      }
-
-      // correct
-      if(cfg.session === "finish" && rtMs <= FAST_MS){
-        it.mastered = true;
-        it.w = 0; // some
-        return { tag: "good", msg: `Acertou rápido ✅ (${(rtMs/1000).toFixed(1)}s) — masterizada!` };
-      }
-
-      if(rtMs >= SLOW_MS){
-        // acerto lento → aparece com MENOS frequência (como você pediu)
-        it.w = Math.max(0.25, it.w * 0.55);
-        // não masteriza
-        return { tag: "warn", msg: `Acertou, mas demorou ⏳ (${(rtMs/1000).toFixed(1)}s)` };
-      }
-
-      // acerto normal (nem rápido nem lento)
-      // vai "descendo" o peso devagar, e masteriza só depois de alguns acertos bons
-      it.w = Math.max(0.35, it.w * 0.75);
-
-      // regra simples de mastery gradual: 3 acertos sem erro recente + peso baixo
-      if(cfg.session === "finish" && it.wrong === 0 && it.attempts >= 3 && it.w <= 0.45){
-        it.mastered = true;
-        it.w = 0;
-        return { tag: "good", msg: `Acertou ✅ — masterizada por consistência!` };
-      }
-
-      return { tag: "good", msg: `Acertou ✅ (${(rtMs/1000).toFixed(1)}s)` };
+    function renderStats(){
+      const total=state.items.length,done=countDone(),percent=total?Math.round(done/total*100):0;
+      $("sMaster").textContent=done;$("sActive").textContent=total-done;$("sWrong").textContent=state.wrong;
+      $("progressPct").textContent=percent+"%";$("progressFill").style.width=percent+"%";
+      $("progressTrack").setAttribute("aria-valuenow",percent);
+      $("progressTitle").textContent=done+" de "+total+" multiplicações";
+      $("sessionStatus").textContent=state.type==="review"?"Revisão das suas dificuldades":"Seu progresso é salvo automaticamente.";
     }
-
-    // ========= Fluxo =========
-    function renderQuestion(it){
-      if(!it){
-        // concluiu
-        if(cfg.session === "finish"){
-          showFinish();
-          return;
-        }
-        // loop sem itens (raro): reinicia
-        initItems(false);
-        return;
-      }
-
-      current = it;
-      qStart = now();
-      elQuestion.firstChild && (elQuestion.childNodes[0].textContent = `${it.a} × ${it.b} = ?`);
-      elQMeta.textContent = (cfg.mode === "minimal")
-        ? "Sem repetições"
-        : "Todas as combinações";
-
-      elAnswer.value = "";
-      elFeedback.innerHTML = `Digite e pressione <b>Enter</b>.`;
-      updateStats();
-      if(cfg.autoFocus){
-        setTimeout(()=> elAnswer.focus({preventScroll:true}), 0);
-      }
+    function displayQuestion(){
+      if(!active().length){finishCycle();return}
+      current=chooseNext();state.lastQuestion=current.key;
+      pausedElapsed=0;qStart=performance.now();
+      $("question").textContent=current.a+" × "+current.b+" = ?";
+      $("qMeta").textContent="MULTIPLICAÇÃO • "+(state.type==="review"?"REVISÃO":"TREINO");
+      $("answer").value="";$("answer").disabled=false;$("btnSubmit").disabled=false;$("btnSkip").disabled=false;
+      answerLocked=false;renderStats();persist();
+      if(cfg.autoFocus&&matchMedia("(pointer:fine)").matches)requestAnimationFrame(()=>$("answer").focus({preventScroll:true}));
     }
-
-    function nextQuestion(force=false){
-      // se estiver em finish e não houver mais ativas, mostra conclusão
-      if(!force && cfg.session === "finish"){
-        const activeCount = items.filter(it => !it.mastered).length;
-        if(activeCount === 0){
-          showFinish();
-          return;
-        }
+    function scoreAnswer(item,isCorrect,isSkip,ms){
+      item.attempts++;state.attempts++;
+      if(isSkip){item.streak=0;item.weight=Math.min(25,item.weight*1.35+.8);state.skipped++;return {text:"Pulou: "+item.a+" × "+item.b+" = "+(item.a*item.b),kind:"warn"}}
+      item.solved++;item.totalMs+=ms;state.totalMs+=ms;
+      if(!isCorrect){
+        item.wrong++;state.wrong++;item.streak=0;item.weight=Math.min(25,item.weight*2.4+1.2);
+        return {text:"A resposta era "+(item.a*item.b)+". Vamos praticar novamente.",kind:"bad"};
       }
-      const it = pickNext();
-      renderQuestion(it);
-    }
-
-    function submitAnswer(isSkip=false){
-      if(!current) return;
-
-      const rt = now() - qStart;
-      const raw = (elAnswer.value || "").trim();
-
-      if(isSkip || raw === ""){
-        // pular conta: conta como erro leve, aumenta pouco
-        current.attempts++;
-        totalAttempts++;
-        current.w = Math.min(25, current.w * 1.35 + 0.8);
-        elFeedback.innerHTML = `<span class="warn">Pulou</span>: ${current.a} × ${current.b} = <b>${current.ans}</b>`;
-        updateStats();
-        nextQuestion();
-        return;
+      state.correct++;item.good++;
+      const fast=ms<=2200,slow=ms>=6500;
+      // Sequência de acertos tem de ser construída sem erros nem pulos entre eles.
+      item.streak+=1;
+      if(slow){item.weight=Math.min(25,item.weight*1.28+.4)}
+      else{item.weight=Math.max(.25,item.weight*(fast?.72:.83))}
+      // Mínimo 3 acertos consecutivos; pelo menos 2 em tempo satisfatório.
+      if(item.streak>=3&&item.good>=3&&item.solved>0&&
+         (item.good-item.wrong)>=2&&ms<6500&&item.weight<=1.6){
+        item.mastered=true;item.weight=0;
+        return {text:"Dominou "+item.a+" × "+item.b+"! Mais uma concluída.",kind:"good"};
       }
-
-      const val = parseInt(raw, 10);
-      const correct = Number.isFinite(val) && val === current.ans;
-
-      const res = applyResult(current, correct, rt);
-
-      elFeedback.innerHTML = `<span class="${res.tag}">${res.msg}</span>`;
-      updateStats();
-
-      // passa pra próxima (como você pediu)
-      nextQuestion();
+      return {text:slow?"Acertou! Vamos ganhar velocidade nessa conta.":"Correto! Continue assim.",kind:"good"};
     }
-
-    // ========= Stats / Timer =========
-    function updateHeaderSubtitle(){
-      const modeTxt = cfg.mode === "minimal" ? "Sem repetições" : "Todas as contas";
-      const sessTxt = cfg.session === "loop" ? "contínuo" : "concluir";
-      elSubtitle.textContent = `${modeTxt} • ${sessTxt}`;
+    function answer(skip=false){
+      if(answerLocked||!current||state.finished)return;
+      const raw=$("answer").value.trim();
+      if(!skip&&!raw){$("answer").focus();return}
+      if(!skip&&!/^-?\d+$/.test(raw)){setFeedback("Digite apenas um número inteiro.","warn");return}
+      answerLocked=true;
+      const ms=duration(),result=scoreAnswer(current,!skip&&Number(raw)===current.a*current.b,skip,ms);
+      renderStats();persist();setFeedback(result.text,result.kind);
+      $("answer").disabled=true;$("btnSubmit").disabled=true;$("btnSkip").disabled=true;
+      if(feedbackTimeout)clearTimeout(feedbackTimeout);
+      feedbackTimeout=setTimeout(()=>{
+        feedbackTimeout=null;
+        current=null;
+        if(!active().length)finishCycle();
+        else{displayQuestion();setFeedback("Digite sua resposta e pressione Enter.")}
+      },result.kind==="bad"?1350:result.kind==="warn"?1050:750);
     }
-
-    function updateStats(){
-      const masteredCount = items.filter(it => it.mastered).length;
-      const activeCount = items.filter(it => !it.mastered).length;
-
-      sMaster.textContent = String(masteredCount);
-      sActive.textContent = String(cfg.session === "loop" ? items.length : activeCount);
-      sWrong.textContent = String(totalWrong);
-
-      timerPill.style.display = cfg.timer ? "inline-flex" : "none";
-      if(cfg.timer){
-        const t = current ? (now() - qStart) : 0;
-        sTimer.textContent = `${(t/1000).toFixed(1)}s`;
-      }
+    function cycleStats(s){
+      const answered=s.correct+s.wrong;
+      return {accuracy:answered?Math.round(s.correct/answered*100):0,avg:s.correct+s.wrong?s.totalMs/(s.correct+s.wrong):0};
     }
-
-    let timerRAF = null;
-    function startTimerLoop(){
-      if(timerRAF) cancelAnimationFrame(timerRAF);
-      const tick = () => {
-        updateStats();
-        timerRAF = requestAnimationFrame(tick);
-      };
-      timerRAF = requestAnimationFrame(tick);
+    function finishCycle(){
+      if(state.finished){showFinish();return}
+      state.finished=true;current=null;pausedElapsed=0;
+      const summary={id:state.id,type:state.type,date:new Date().toISOString(),tables:state.cfg.tables.slice(),excluded:state.cfg.excludeFactors.slice(),count:state.items.length,wrong:state.wrong,attempts:state.attempts,correct:state.correct,skipped:state.skipped,totalMs:state.totalMs,hard:state.items.slice().sort((a,b)=>score(b)-score(a)).slice(0,5).map(i=>({a:i.a,b:i.b,wrong:i.wrong,attempts:i.attempts,avg:i.solved?i.totalMs/i.solved:0}))};
+      if(!db.history.some(h=>h.id===summary.id))db.history.unshift(summary);
+      db.history=db.history.slice(0,200);
+      persist();renderStats();$("question").textContent="Ciclo concluído!";$("answer").disabled=true;$("btnSubmit").disabled=true;$("btnSkip").disabled=true;
+      setFeedback("Parabéns! Você dominou todas as contas deste ciclo.","good");
+      showFinish();
     }
-
-    // ========= Modais =========
-    function show(el){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); }
-    function hide(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
-
-    document.addEventListener("click", (e)=>{
-      const t = e.target;
-      if(t && t.dataset && t.dataset.close){
-        hide($(t.dataset.close));
-      }
-      if(t === overlayOptions) hide(overlayOptions);
-      if(t === overlayFinish) hide(overlayFinish);
-    });
-
     function showFinish(){
-      fMaster.textContent = String(items.filter(it=>it.mastered).length);
-      fWrong.textContent = String(totalWrong);
-      fAttempts.textContent = String(totalAttempts);
-      show(overlayFinish);
+      const h=db.history.find(e=>e.id===state.id),s=h||{...state,count:state.items.length,hard:[]};
+      const stats=cycleStats(s),previous=db.history.find(e=>e.id!==s.id&&e.type===s.type&&e.count===s.count);
+      $("fMaster").textContent=s.count;$("fWrong").textContent=s.wrong;$("fAttempts").textContent=s.attempts;
+      $("fAccuracy").textContent=stats.accuracy+"%";$("fAverage").textContent=stats.avg?(stats.avg/1000).toFixed(1)+"s":"—";
+      if(previous){
+        const delta=stats.accuracy-cycleStats(previous).accuracy;
+        $("fCompare").textContent=(delta>0?"+":"")+delta+" pontos na precisão";
+      }else $("fCompare").textContent="Primeiro ciclo comparável";
+      $("fHard").textContent=s.hard&&s.hard.length?s.hard.slice(0,3).map(i=>i.a+"×"+i.b).join(", "):"Nenhuma";
+      show($("overlayFinish"));
     }
-
-    // ========= Opções UI =========
+    function resetCycle(){
+      if(feedbackTimeout)clearTimeout(feedbackTimeout);
+      hide($("overlayFinish"));
+      state=newState(cfg);current=null;lastKey=null;persist();
+      if(!state.items.length){emptyState();return}
+      displayQuestion();setFeedback("Novo ciclo iniciado!");
+    }
+    function emptyState(){
+      current=null;answerLocked=true;
+      $("question").textContent="Escolha suas tabuadas";
+      $("answer").disabled=true;$("btnSubmit").disabled=true;$("btnSkip").disabled=true;
+      setFeedback("Nenhuma multiplicação disponível. Ajuste sua seleção em Configurar.","warn");renderStats();persist();
+    }
+    function beginReview(){
+      let candidates=[];
+      for(const h of db.history.slice(0,20)){
+        if(Array.isArray(h.hard))for(const i of h.hard)if(i.wrong>0||i.avg>=4500)candidates.push(i);
+      }
+      if(state&&Array.isArray(state.items))for(const i of state.items)if(i.wrong>0||(i.solved&&i.totalMs/i.solved>=4500))candidates.push(i);
+      const seen=new Set(),list=[];
+      for(const i of candidates){
+        const key=cfg.mode==="minimal"?[Math.min(i.a,i.b),Math.max(i.a,i.b)].join("x"):i.a+"x"+i.b;
+        if(seen.has(key))continue;
+        if(!cfg.tables.includes(i.a)||cfg.excludeFactors.includes(i.a)||cfg.excludeFactors.includes(i.b))continue;
+        if(i.b<Math.min(cfg.minMul,cfg.maxMul)||i.b>Math.max(cfg.minMul,cfg.maxMul))continue;
+        seen.add(key);list.push({key,a:i.a,b:i.b,weight:1.3,attempts:0,wrong:0,streak:0,good:0,mastered:false,totalMs:0,solved:0});
+      }
+      if(!list.length){window.alert("Ainda não há dificuldades registradas para revisar com estas configurações.");return}
+      if(!state.finished&&state.attempts>0&&!confirm("Iniciar uma revisão? Seu ciclo atual será substituído, mas o histórico de ciclos concluídos continua salvo."))return;
+      hide($("overlayFinish"));hide($("overlayHistory"));
+      state=newState(cfg,list.slice(0,100),"review");persist();displayQuestion();setFeedback("Revisão iniciada. Vamos reforçar as contas mais difíceis.");
+    }
+    function renderHistory(){
+      const h=db.history,localDay=d=>new Date(d).toLocaleDateString("en-CA");
+      $("hCycles").textContent=h.length;$("hToday").textContent=h.filter(v=>localDay(v.date)===localDay(new Date())).length;
+      $("hDom").textContent=h.reduce((n,v)=>n+(Number(v.count)||0),0);
+      const correct=h.reduce((n,v)=>n+(Number(v.correct)||0),0),wrong=h.reduce((n,v)=>n+(Number(v.wrong)||0),0);
+      $("hAccuracy").textContent=correct+wrong?Math.round(correct/(correct+wrong)*100)+"%":"—";
+      $("historyEntries").replaceChildren();
+      if(!h.length){const p=document.createElement("p");p.textContent="Você ainda não concluiu nenhum ciclo.";p.className="muted";$("historyEntries").appendChild(p);return}
+      for(const entry of h.slice(0,30)){
+        const card=document.createElement("div");card.className="history-entry";
+        const title=document.createElement("b");title.textContent=(entry.type==="review"?"Revisão":"Treino")+" • "+entry.count+" contas";
+        const info=document.createElement("span");info.textContent=new Date(entry.date).toLocaleString("pt-BR")+" · "+cycleStats(entry).accuracy+"% de acertos · "+entry.attempts+" tentativas";
+        card.append(title,info);$("historyEntries").appendChild(card);
+      }
+    }
+    function show(el){el.classList.add("show");el.setAttribute("aria-hidden","false")}
+    function hide(el){el.classList.remove("show");el.setAttribute("aria-hidden","true")}
+    document.addEventListener("click",e=>{
+      const b=e.target.closest("[data-close]");if(b)hide($(b.dataset.close));
+      if(e.target.classList.contains("overlay"))hide(e.target);
+    });
+    document.addEventListener("keydown",e=>{
+      if(e.key==="Escape")document.querySelectorAll(".overlay.show").forEach(hide);
+    });
     function buildGrids(){
-      // tabuadas 0..12 (você pode mudar)
-      const nums = Array.from({length:13}, (_,i)=>i);
-
-      tablesGrid.innerHTML = "";
-      for(const n of nums){
-        const id = `t_${n}`;
-        const wrap = document.createElement("label");
-        wrap.className = "chk";
-        wrap.innerHTML = `
-          <input type="checkbox" id="${id}" ${cfg.tables.includes(n) ? "checked":""} />
-          <div style="font-weight:900;">${n}</div>
-        `;
-        tablesGrid.appendChild(wrap);
+      const nums=Array.from({length:13},(_,i)=>i);
+      for(const [id,prefix,chosen] of [["tablesGrid","t",cfg.tables],["excludeGrid","e",cfg.excludeFactors]]){
+        const parent=$(id);parent.replaceChildren();
+        for(const n of nums){
+          const label=document.createElement("label");label.className="chk";
+          const input=document.createElement("input");input.type="checkbox";input.id=prefix+"_"+n;input.checked=chosen.includes(n);
+          const txt=document.createElement("b");txt.textContent=String(n);label.append(input,txt);parent.appendChild(label);
+        }
       }
-
-      excludeGrid.innerHTML = "";
-      for(const n of nums){
-        const id = `e_${n}`;
-        const wrap = document.createElement("label");
-        wrap.className = "chk";
-        wrap.innerHTML = `
-          <input type="checkbox" id="${id}" ${cfg.excludeFactors.includes(n) ? "checked":""} />
-          <div style="font-weight:900;">${n}</div>
-        `;
-        excludeGrid.appendChild(wrap);
-      }
-
-      modeSelect.value = cfg.mode;
-      sessionSelect.value = cfg.session;
-      toggleTimer.checked = !!cfg.timer;
-      toggleAutoFocus.checked = !!cfg.autoFocus;
-      minMul.value = cfg.minMul;
-      maxMul.value = cfg.maxMul;
+      $("modeSelect").value=cfg.mode;$("toggleTimer").checked=cfg.timer;$("toggleAutoFocus").checked=cfg.autoFocus;
+      $("minMul").value=cfg.minMul;$("maxMul").value=cfg.maxMul;
     }
-
-    function readGrids(){
-      const tables = [];
-      const exclude = [];
-      for(let n=0;n<=12;n++){
-        const t = document.getElementById(`t_${n}`);
-        const e = document.getElementById(`e_${n}`);
-        if(t && t.checked) tables.push(n);
-        if(e && e.checked) exclude.push(n);
-      }
-      cfg.mode = modeSelect.value;
-      cfg.session = sessionSelect.value;
-      cfg.timer = toggleTimer.checked;
-      cfg.autoFocus = toggleAutoFocus.checked;
-      cfg.tables = tables.length ? tables : [3,4,6,7,8,9]; // fallback
-      cfg.excludeFactors = exclude;
-      cfg.minMul = clamp(parseInt(minMul.value,10) || 1, 0, 20);
-      cfg.maxMul = clamp(parseInt(maxMul.value,10) || 10, 0, 20);
-      saveCfg(cfg);
-      updateHeaderSubtitle();
+    function applyOptions(){
+      const tables=[],exclude=[];
+      for(let i=0;i<=12;i++){if($("t_"+i).checked)tables.push(i);if($("e_"+i).checked)exclude.push(i)}
+      if(!tables.length){window.alert("Selecione pelo menos uma tabuada.");return}
+      const newCfg=validConfig({mode:$("modeSelect").value,tables,excludeFactors:exclude,minMul:$("minMul").value,maxMul:$("maxMul").value,timer:$("toggleTimer").checked,autoFocus:$("toggleAutoFocus").checked});
+      const generated=problems(newCfg);
+      if(!generated.length){window.alert("Esta seleção não produz nenhuma multiplicação. Ajuste os números ignorados ou o intervalo.");return}
+      const oldSet=JSON.stringify({mode:cfg.mode,tables:cfg.tables,excludeFactors:cfg.excludeFactors,minMul:cfg.minMul,maxMul:cfg.maxMul});
+      const newSet=JSON.stringify({mode:newCfg.mode,tables:newCfg.tables,excludeFactors:newCfg.excludeFactors,minMul:newCfg.minMul,maxMul:newCfg.maxMul});
+      const changed=oldSet!==newSet;
+      if(changed&&!state.finished&&state.attempts>0&&!confirm("Mudar as tabuadas inicia um novo ciclo. Deseja continuar?"))return;
+      cfg=newCfg;write(SETTINGS_KEY,cfg);hide($("overlayOptions"));
+      if(changed){state=newState(cfg);persist();displayQuestion();setFeedback("Novo ciclo iniciado com suas tabuadas.")}
+      else{state.cfg=structuredClone(cfg);persist();renderStats();if(!state.finished&&!current&&active().length)displayQuestion()}
     }
-
-    // ========= Botões =========
-    $("btnOptions").addEventListener("click", ()=>{
-      buildGrids();
-      show(overlayOptions);
+    $("btnOptions").addEventListener("click",()=>{buildGrids();show($("overlayOptions"))});
+    $("btnApply").addEventListener("click",applyOptions);
+    $("btnAll").addEventListener("click",()=>{for(let i=0;i<=12;i++)$("t_"+i).checked=true});
+    $("btnNone").addEventListener("click",()=>{for(let i=0;i<=12;i++)$("t_"+i).checked=false});
+    $("btnReset").addEventListener("click",()=>{if(!state.finished&&state.attempts>0&&!confirm("Recomeçar este ciclo? O progresso atual será perdido."))return;resetCycle()});
+    $("btnHardReset").addEventListener("click",()=>{
+      if(!confirm("Restaurar as configurações padrão e iniciar outro ciclo? O histórico de ciclos concluídos será preservado."))return;
+      cfg=validConfig(defaults);write(SETTINGS_KEY,cfg);hide($("overlayOptions"));resetCycle();
     });
-
-    $("btnApply").addEventListener("click", ()=>{
-      readGrids();
-      hide(overlayOptions);
-      initItems(false);
+    $("btnFinishReset").addEventListener("click",resetCycle);
+    $("btnFinishReview").addEventListener("click",beginReview);
+    $("btnReview").addEventListener("click",beginReview);
+    $("btnHistory").addEventListener("click",()=>{renderHistory();show($("overlayHistory"))});
+    $("btnSkip").addEventListener("click",()=>answer(true));
+    $("answerForm").addEventListener("submit",e=>{e.preventDefault();answer()});
+    $("btnExport").addEventListener("click",()=>{
+      const blob=new Blob([JSON.stringify({version:2,settings:cfg,data:db},null,2)],{type:"application/json"});
+      const link=document.createElement("a"),url=URL.createObjectURL(blob);link.href=url;link.download="tabuada-backup.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
     });
-
-    $("btnAll").addEventListener("click", ()=>{
-      for(let n=0;n<=12;n++){
-        const t = document.getElementById(`t_${n}`);
-        if(t) t.checked = true;
-      }
+    $("btnImport").addEventListener("click",()=>$("importFile").click());
+    $("importFile").addEventListener("change",async e=>{
+      const file=e.target.files?.[0];if(!file)return;
+      try{
+        if(file.size>2000000)throw new Error("Arquivo muito grande");
+        const content=JSON.parse(await file.text());
+        if(content.version!==2||!content.data||!Array.isArray(content.data.history)||content.data.history.length>2000)throw new Error("Arquivo incompatível");
+        if(!confirm("Importar estes dados? Seu progresso e histórico atuais serão substituídos."))return;
+        db={active:content.data.active||null,history:content.data.history.slice(0,200)};
+        cfg=validConfig(content.settings);state=normalizeState(db.active)||newState(cfg);
+        cfg=state.cfg;write(SETTINGS_KEY,cfg);persist();hide($("overlayHistory"));
+        if(state.finished){renderStats();showFinish()}else if(state.items.length)displayQuestion();else emptyState();
+      }catch(err){alert("Não foi possível importar o arquivo: "+err.message)}
+      finally{e.target.value=""}
     });
-    $("btnNone").addEventListener("click", ()=>{
-      for(let n=0;n<=12;n++){
-        const t = document.getElementById(`t_${n}`);
-        if(t) t.checked = false;
-      }
-    });
-
-    function softReset(){
-      // reset da sessão (mantém config)
-      initItems(true);
-      elFeedback.innerHTML = `Novo treino iniciado!`;
-      if(cfg.autoFocus) elAnswer.focus({preventScroll:true});
+    // Cronômetro visual: desenhado sem recalcular todas as estatísticas a cada frame.
+    let lastSecond=-1;
+    function tick(){
+      const pill=$("timerPill");pill.style.display=cfg.timer?"inline-flex":"none";
+      if(cfg.timer&&current&&!answerLocked){
+        const tenth=Math.floor(duration()/100);
+        if(tenth!==lastSecond){lastSecond=tenth;$("sTimer").textContent=(tenth/10).toFixed(1).replace(".",",")+"s"}
+      }else if(!current){$("sTimer").textContent="0,0s"}
+      requestAnimationFrame(tick);
     }
-
-    $("btnReset").addEventListener("click", softReset);
-    $("btnHardReset").addEventListener("click", ()=>{
-      cfg = structuredClone(DEFAULTS);
-      saveCfg(cfg);
-      hide(overlayOptions);
-      initItems(true);
-    });
-
-    $("btnFinishReset").addEventListener("click", ()=>{
-      hide(overlayFinish);
-      softReset();
-    });
-
-    $("btnSubmit").addEventListener("click", ()=> submitAnswer(false));
-    $("btnSkip").addEventListener("click", ()=> submitAnswer(true));
-
-    elAnswer.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        e.preventDefault();
-        submitAnswer(false);
-      }
-    });
-
-    // ========= Anti-zoom extra (nem todo browser respeita) =========
-    // iOS costuma ignorar user-scalable em alguns casos. Isso ajuda um pouco.
-    document.addEventListener("gesturestart", (e)=> e.preventDefault(), { passive:false });
-    document.addEventListener("touchmove", (e)=>{
-      if(e.scale && e.scale !== 1) e.preventDefault();
-    }, { passive:false });
-
-    // ========= Boot =========
-    updateHeaderSubtitle();
-    initItems(true);
-    startTimerLoop();
+    // Retomar não conta o tempo enquanto a página estava fechada.
+    renderStats();
+    if(state.finished) {current=null;$("question").textContent="Ciclo concluído!";$("answer").disabled=true;$("btnSubmit").disabled=true;$("btnSkip").disabled=true;setFeedback("Abra o resumo ou inicie um novo ciclo.","good")}
+    else if(state.items.length)displayQuestion();
+    else emptyState();
+    tick();
+  })();
   </script>
 </body>
 </html>
