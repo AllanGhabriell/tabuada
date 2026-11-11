@@ -93,7 +93,7 @@ if(c.operation==="units"){
 const sets={length:[["km",1000],["hm",100],["dam",10],["m",1],["dm",.1],["cm",.01],["mm",.001]],mass:[["kg",1000],["g",1],["mg",.001]],volume:[["L",1000],["mL",1]],time:[["h",3600],["min",60],["s",1]]};
 const kinds=m==="free"?Object.keys(sets):[m];
 for(let i=0;i<n;i++){
-const set=sets[kinds[i%kinds.length]],a=set[i%set.length],b=set[(i+1+Math.floor(i/set.length))%set.length];
+const set=sets[kinds[i%kinds.length]],a=set[i%set.length],b=set[(i+1)%set.length];
 if(a[0]===b[0])continue;
 const amount=rand(1,[20,100,300][L-1])/(L===1?1:L===2?10:100);
 add(display(amount)+" "+a[0]+" = ? "+b[0],Number((amount*a[1]/b[1]).toPrecision(12)),i);
